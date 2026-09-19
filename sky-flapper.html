@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Sky Flapper</title>
+  <style>
+    :root {
+      --panel: rgba(12, 18, 40, 0.88);
+      --panel-border: rgba(255, 255, 255, 0.18);
+      --text: #f7fbff;
+      --muted: #b9c5dc;
+      --accent: #ffd84a;
+      --accent-2: #79efff;
+      --danger: #ff6b82;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: Inter, ui-rounded, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 15%, rgba(96, 217, 255, .24), transparent 34%),
+        linear-gradient(155deg, #071328, #10193c 58%, #241b49);
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    button, input { font: inherit; }
+
+    .app {
+      position: relative;
+      width: 100vw;
+      height: 100dvh;
+      min-height: 520px;
+      display: grid;
+      place-items: center;
+      padding: 12px;
+    }
+
+    .game-shell {
+      position: relative;
+      height: min(94dvh, 760px);
+      aspect-ratio: 2 / 3;
+      max-width: 94vw;
+      overflow: hidden;
+      border-radius: 28px;
+      border: 2px solid rgba(255,255,255,.22);
+      background: #66d8ff;
+      box-shadow: 0 28px 85px rgba(0,0,0,.48), inset 0 0 0 1px rgba(255,255,255,.12);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .topbar {
+      position: absolute;
+      top: 13px;
+      left: 13px;
+      right: 13px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      z-index: 3;
+    }
+
+    .score-pill, .icon-btn {
+      border: 1px solid rgba(255,255,255,.28);
+      background: rgba(8, 17, 38, .68);
+      color: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      backdrop-filter: blur(9px);
+    }
+
+    .score-pill {
+      min-width: 86px;
+      padding: 8px 13px;
+      text-align: center;
+      font-weight: 900;
+      font-size: 24px;
+      line-height: 1;
+      text-shadow: 0 2px 0 rgba(0,0,0,.3);
+    }
+
+    .icon-btn {
+      pointer-events: auto;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      transition: transform .16s ease, background .16s ease;
+    }
+
+    .icon-btn:hover { transform: translateY(-2px); background: rgba(19, 31, 63, .9); }
+    .icon-btn:active { transform: scale(.95); }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: linear-gradient(rgba(5,15,38,.18), rgba(5,12,31,.48));
+      transition: opacity .22s ease, visibility .22s ease;
+    }
+
+    .screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .panel {
+      width: min(100%, 390px);
+      max-height: 94%;
+      overflow: auto;
+      padding: 24px;
+      border-radius: 25px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+      box-shadow: 0 28px 70px rgba(0,0,0,.35);
+      backdrop-filter: blur(14px);
+      text-align: center;
+    }
+
+    .logo {
+      margin: 0;
+      font-size: clamp(42px, 9vw, 64px);
+      line-height: .9;
+      letter-spacing: -3px;
+      color: var(--accent);
+      text-shadow: 0 4px 0 #d18d1f, 0 8px 18px rgba(0,0,0,.28);
+    }
+
+    .subtitle {
+      margin: 12px 0 18px;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .difficulty-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin: 14px 0 18px;
+    }
+
+    .difficulty {
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 16px;
+      background: rgba(255,255,255,.07);
+      color: white;
+      padding: 12px 6px;
+      cursor: pointer;
+      transition: .16s ease;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .difficulty small {
+      display: block;
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .difficulty:hover { transform: translateY(-2px); background: rgba(255,255,255,.11); }
+    .difficulty.selected {
+      color: #17203c;
+      background: var(--accent);
+      border-color: #fff3a8;
+      box-shadow: 0 8px 24px rgba(255,216,74,.24);
+    }
+    .difficulty.selected small { color: #5b4b0b; }
+
+    .primary, .secondary {
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-weight: 1000;
+      cursor: pointer;
+      transition: transform .15s ease, filter .15s ease;
+    }
+
+    .primary {
+      color: #1a2037;
+      background: linear-gradient(#fff077, #ffc928);
+      box-shadow: 0 8px 0 #cb8c18, 0 14px 28px rgba(0,0,0,.24);
+      font-size: 18px;
+    }
+    .primary:hover { filter: brightness(1.05); transform: translateY(-2px); }
+    .primary:active { transform: translateY(5px); box-shadow: 0 3px 0 #cb8c18; }
+
+    .secondary {
+      margin-top: 11px;
+      color: white;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+    }
+
+    .hint {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .high-scores {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .high-card {
+      padding: 10px 5px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 14px;
+      background: rgba(255,255,255,.055);
+    }
+    .high-card span { display: block; color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; }
+    .high-card strong { font-size: 22px; }
+
+    .game-over-title {
+      margin: 0 0 5px;
+      color: #ff8b9f;
+      font-size: 38px;
+      text-shadow: 0 3px 0 #8f2c42;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .result {
+      padding: 13px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .result span { display: block; color: var(--muted); font-size: 11px; font-weight: 900; text-transform: uppercase; }
+    .result strong { font-size: 30px; }
+
+    .new-best {
+      display: none;
+      margin: -5px 0 12px;
+      color: var(--accent);
+      font-weight: 1000;
+      animation: pulse .65s ease-in-out infinite alternate;
+    }
+    .new-best.show { display: block; }
+
+    @keyframes pulse { to { transform: scale(1.07); } }
+
+    .setting-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 0;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      text-align: left;
+    }
+
+    .setting-row:last-of-type { border-bottom: 0; }
+    .setting-row label { font-weight: 900; }
+    .setting-row small { display: block; color: var(--muted); margin-top: 3px; }
+
+    .toggle {
+      width: 54px;
+      height: 31px;
+      border: 0;
+      border-radius: 999px;
+      background: #47516c;
+      padding: 3px;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .toggle::after {
+      content: "";
+      display: block;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+      transition: transform .2s ease;
+    }
+    .toggle.on { background: #4bd58b; }
+    .toggle.on::after { transform: translateX(23px); }
+
+    input[type="range"] {
+      width: 130px;
+      accent-color: var(--accent);
+    }
+
+    .mode-badge {
+      margin-top: 7px;
+      color: var(--accent-2);
+      font-size: 12px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .countdown {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      font-size: 80px;
+      font-weight: 1000;
+      color: white;
+      text-shadow: 0 6px 0 rgba(0,0,0,.25);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-height: 610px) {
+      .panel { padding: 18px; }
+      .logo { font-size: 40px; }
+      .subtitle { margin-bottom: 10px; }
+      .difficulty-grid { margin: 10px 0 13px; }
+      .hint { margin-top: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="game-shell" id="gameShell" aria-label="Sky Flapper game">
+      <canvas id="game" width="480" height="720"></canvas>
+
+      <div class="hud">
+        <div class="topbar">
+          <div class="score-pill" id="scorePill">0</div>
+          <button class="icon-btn" id="settingsButton" aria-label="Open settings">⚙️</button>
+        </div>
+      </div>
+
+      <div class="countdown" id="countdown"></div>
+
+      <section class="screen" id="menuScreen">
+        <div class="panel">
+          <h1 class="logo">SKY<br>FLAPPER</h1>
+          <div class="mode-badge" id="menuModeBadge">NORMAL MODE</div>
+          <p class="subtitle">Fly through the pipes and beat your best score!</p>
+
+          <div class="difficulty-grid" role="group" aria-label="Difficulty">
+            <button class="difficulty" data-difficulty="easy">Easy<small>Big gaps · Slow</small></button>
+            <button class="difficulty selected" data-difficulty="normal">Normal<small>Balanced flight</small></button>
+            <button class="difficulty" data-difficulty="hard">Hard<small>Tight gaps · Fast</small></button>
+          </div>
+
+          <button class="primary" id="playButton">PLAY</button>
+          <button class="secondary" id="menuSettingsButton">SETTINGS</button>
+
+          <div class="high-scores">
+            <div class="high-card"><span>Easy Best</span><strong id="easyBest">0</strong></div>
+            <div class="high-card"><span>Normal Best</span><strong id="normalBest">0</strong></div>
+            <div class="high-card"><span>Hard Best</span><strong id="hardBest">0</strong></div>
+          </div>
+
+          <p class="hint">Click, tap, or press SPACE to flap</p>
+        </div>
+      </section>
+
+      <section class="screen hidden" id="gameOverScreen">
+        <div class="panel">
+          <h2 class="game-over-title">GAME OVER</h2>
+          <div class="mode-badge" id="overModeBadge">NORMAL MODE</div>
+          <div class="result-grid">
+            <div class="result"><span>Score</span><strong id="finalScore">0</strong></div>
+            <div class="result"><span>Best</span><strong id="finalBest">0</strong></div>
+          </div>
+          <div class="new-best" id="newBest">★ NEW HIGH SCORE! ★</div>
+          <button class="primary" id="retryButton">PLAY AGAIN</button>
+          <button class="secondary" id="homeButton">MAIN MENU</button>
+        </div>
+      </section>
+
+      <section class="screen hidden" id="settingsScreen">
+        <div class="panel">
+          <h2 style="margin:0 0 8px; font-size:34px;">Settings</h2>
+          <p class="subtitle" style="margin-top:0;">Your choices are saved automatically.</p>
+
+          <div class="setting-row">
+            <div><label>Music</label><small>Play the uploaded background song</small></div>
+            <button class="toggle on" id="musicToggle" aria-label="Toggle music"></button>
+          </div>
+
+          <div class="setting-row">
+            <div><label>Sound Effects</label><small>Flaps, points, and crashes</small></div>
+            <button class="toggle on" id="sfxToggle" aria-label="Toggle sound effects"></button>
+          </div>
+
+          <div class="setting-row">
+            <div><label for="volumeSlider">Music Volume</label><small id="volumeText">45%</small></div>
+            <input type="range" id="volumeSlider" min="0" max="100" value="45" />
+          </div>
+
+          <button class="primary" id="closeSettingsButton" style="margin-top:18px;">DONE</button>
+          <button class="secondary" id="resetScoresButton">RESET HIGH SCORES</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <audio id="music" src="music.mp3" preload="auto" loop></audio>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width;
+      const H = canvas.height;
+      const GROUND_Y = H - 86;
+
+      const ui = {
+        menu: document.getElementById("menuScreen"),
+        over: document.getElementById("gameOverScreen"),
+        settings: document.getElementById("settingsScreen"),
+        score: document.getElementById("scorePill"),
+        finalScore: document.getElementById("finalScore"),
+        finalBest: document.getElementById("finalBest"),
+        newBest: document.getElementById("newBest"),
+        countdown: document.getElementById("countdown"),
+        menuModeBadge: document.getElementById("menuModeBadge"),
+        overModeBadge: document.getElementById("overModeBadge"),
+        easyBest: document.getElementById("easyBest"),
+        normalBest: document.getElementById("normalBest"),
+        hardBest: document.getElementById("hardBest"),
+        musicToggle: document.getElementById("musicToggle"),
+        sfxToggle: document.getElementById("sfxToggle"),
+        volumeSlider: document.getElementById("volumeSlider"),
+        volumeText: document.getElementById("volumeText")
+      };
+
+      const music = document.getElementById("music");
+
+      const difficulties = {
+        easy:   { speed: 128, gap: 210, gravity: 900,  flap: -340, spawn: 1.82, minGapY: 155, maxGapY: 485 },
+        normal: { speed: 174, gap: 170, gravity: 1060, flap: -376, spawn: 1.52, minGapY: 145, maxGapY: 500 },
+        hard:   { speed: 220, gap: 136, gravity: 1240, flap: -405, spawn: 1.28, minGapY: 125, maxGapY: 515 }
+      };
+
+      const state = {
+        mode: "menu",
+        difficulty: localStorage.getItem("skyFlapperDifficulty") || "normal",
+        score: 0,
+        pipes: [],
+        particles: [],
+        spawnTimer: 0,
+        scroll: 0,
+        lastTime: performance.now(),
+        settingsReturn: "menu",
+        flash: 0,
+        shake: 0,
+        musicOn: localStorage.getItem("skyFlapperMusic") !== "false",
+        sfxOn: localStorage.getItem("skyFlapperSfx") !== "false",
+        volume: Number(localStorage.getItem("skyFlapperVolume") ?? 45)
+      };
+
+      const bird = {
+        x: 124,
+        y: H * 0.45,
+        vy: 0,
+        r: 17,
+        rotation: 0,
+        wing: 0
+      };
+
+      let audioCtx = null;
+
+      function getHigh(mode) {
+        return Number(localStorage.getItem(`skyFlapperBest_${mode}`) || 0);
+      }
+
+      function setHigh(mode, value) {
+        localStorage.setItem(`skyFlapperBest_${mode}`, String(value));
+      }
+
+      function updateBestLabels() {
+        ui.easyBest.textContent = getHigh("easy");
+        ui.normalBest.textContent = getHigh("normal");
+        ui.hardBest.textContent = getHigh("hard");
+      }
+
+      function ensureAudio() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+      }
+
+      function playTone(type) {
+        if (!state.sfxOn) return;
+        ensureAudio();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === "flap") {
+          osc.type = "square";
+          osc.frequency.setValueAtTime(430, now);
+          osc.frequency.exponentialRampToValueAtTime(720, now + .08);
+          gain.gain.setValueAtTime(.08, now);
+          gain.gain.exponentialRampToValueAtTime(.001, now + .1);
+          osc.start(now); osc.stop(now + .11);
+        } else if (type === "point") {
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(780, now);
+          osc.frequency.setValueAtTime(1040, now + .06);
+          gain.gain.setValueAtTime(.1, now);
+          gain.gain.exponentialRampToValueAtTime(.001, now + .15);
+          osc.start(now); osc.stop(now + .16);
+        } else if (type === "hit") {
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.exponentialRampToValueAtTime(55, now + .3);
+          gain.gain.setValueAtTime(.13, now);
+          gain.gain.exponentialRampToValueAtTime(.001, now + .32);
+          osc.start(now); osc.stop(now + .33);
+        } else if (type === "start") {
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(420, now);
+          osc.frequency.setValueAtTime(620, now + .1);
+          osc.frequency.setValueAtTime(860, now + .2);
+          gain.gain.setValueAtTime(.08, now);
+          gain.gain.exponentialRampToValueAtTime(.001, now + .28);
+          osc.start(now); osc.stop(now + .3);
+        }
+      }
+
+      function syncMusic() {
+        music.volume = Math.max(0, Math.min(1, state.volume / 100));
+        if (state.musicOn) {
+          music.play().catch(() => {});
+        } else {
+          music.pause();
+        }
+      }
+
+      function updateSettingsUI() {
+        ui.musicToggle.classList.toggle("on", state.musicOn);
+        ui.sfxToggle.classList.toggle("on", state.sfxOn);
+        ui.volumeSlider.value = state.volume;
+        ui.volumeText.textContent = `${state.volume}%`;
+        music.volume = state.volume / 100;
+      }
+
+      function selectDifficulty(mode) {
+        state.difficulty = mode;
+        localStorage.setItem("skyFlapperDifficulty", mode);
+        document.querySelectorAll(".difficulty").forEach(btn => {
+          btn.classList.toggle("selected", btn.dataset.difficulty === mode);
+        });
+        const label = `${mode.toUpperCase()} MODE`;
+        ui.menuModeBadge.textContent = label;
+        ui.overModeBadge.textContent = label;
+      }
+
+      function resetWorld() {
+        state.score = 0;
+        state.pipes = [];
+        state.particles = [];
+        state.spawnTimer = .55;
+        state.flash = 0;
+        state.shake = 0;
+        bird.y = H * .43;
+        bird.vy = 0;
+        bird.rotation = 0;
+        bird.wing = 0;
+        ui.score.textContent = "0";
+      }
+
+      async function startGame() {
+        ensureAudio();
+        syncMusic();
+        resetWorld();
+        state.mode = "countdown";
+        ui.menu.classList.add("hidden");
+        ui.over.classList.add("hidden");
+        ui.settings.classList.add("hidden");
+        playTone("start");
+
+        for (const n of [3, 2, 1]) {
+          ui.countdown.textContent = n;
+          ui.countdown.style.opacity = "1";
+          ui.countdown.animate([
+            { transform: "scale(.45)", opacity: 0 },
+            { transform: "scale(1.08)", opacity: 1, offset: .55 },
+            { transform: "scale(1)", opacity: 0 }
+          ], { duration: 470, easing: "ease-out" });
+          await new Promise(r => setTimeout(r, 500));
+        }
+        ui.countdown.style.opacity = "0";
+        state.mode = "playing";
+        flap();
+      }
+
+      function flap() {
+        if (state.mode !== "playing") return;
+        bird.vy = difficulties[state.difficulty].flap;
+        bird.wing = 1;
+        emitParticles(bird.x - 15, bird.y + 6, 5, "white");
+        playTone("flap");
+      }
+
+      function spawnPipe() {
+        const d = difficulties[state.difficulty];
+        const center = d.minGapY + Math.random() * (d.maxGapY - d.minGapY);
+        state.pipes.push({ x: W + 40, center, gap: d.gap, scored: false });
+      }
+
+      function emitParticles(x, y, count, kind = "yellow") {
+        for (let i = 0; i < count; i++) {
+          state.particles.push({
+            x, y,
+            vx: (Math.random() - .5) * 150 - 25,
+            vy: (Math.random() - .5) * 130,
+            life: .35 + Math.random() * .35,
+            maxLife: .7,
+            size: 2 + Math.random() * 5,
+            kind
+          });
+        }
+      }
+
+      function circleRectCollision(cx, cy, r, x, y, w, h) {
+        const nearestX = Math.max(x, Math.min(cx, x + w));
+        const nearestY = Math.max(y, Math.min(cy, y + h));
+        const dx = cx - nearestX;
+        const dy = cy - nearestY;
+        return dx * dx + dy * dy < r * r;
+      }
+
+      function endGame() {
+        if (state.mode !== "playing") return;
+        state.mode = "gameover";
+        state.shake = 12;
+        state.flash = .65;
+        playTone("hit");
+        emitParticles(bird.x, bird.y, 22, "yellow");
+
+        const oldBest = getHigh(state.difficulty);
+        const isNew = state.score > oldBest;
+        if (isNew) setHigh(state.difficulty, state.score);
+        const best = Math.max(oldBest, state.score);
+
+        ui.finalScore.textContent = state.score;
+        ui.finalBest.textContent = best;
+        ui.newBest.classList.toggle("show", isNew);
+        updateBestLabels();
+
+        setTimeout(() => {
+          ui.over.classList.remove("hidden");
+        }, 470);
+      }
+
+      function update(dt) {
+        state.scroll = (state.scroll + dt * (state.mode === "playing" ? difficulties[state.difficulty].speed : 36)) % W;
+        state.flash = Math.max(0, state.flash - dt * 2.4);
+        state.shake = Math.max(0, state.shake - dt * 30);
+
+        for (let i = state.particles.length - 1; i >= 0; i--) {
+          const p = state.particles[i];
+          p.life -= dt;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vy += 240 * dt;
+          if (p.life <= 0) state.particles.splice(i, 1);
+        }
+
+        if (state.mode === "menu" || state.mode === "countdown") {
+          bird.y = H * .43 + Math.sin(performance.now() / 330) * 11;
+          bird.rotation = Math.sin(performance.now() / 450) * .08;
+          bird.wing = (Math.sin(performance.now() / 90) + 1) / 2;
+          return;
+        }
+
+        if (state.mode !== "playing") {
+          bird.vy += 1100 * dt;
+          bird.y += bird.vy * dt;
+          bird.rotation = Math.min(1.45, bird.rotation + dt * 3.3);
+          if (bird.y > GROUND_Y - bird.r) {
+            bird.y = GROUND_Y - bird.r;
+            bird.vy = 0;
+          }
+          return;
+        }
+
+        const d = difficulties[state.difficulty];
+        bird.vy += d.gravity * dt;
+        bird.y += bird.vy * dt;
+        bird.rotation = Math.max(-.55, Math.min(1.35, bird.vy / 520));
+        bird.wing = Math.max(0, bird.wing - dt * 5.5);
+
+        state.spawnTimer -= dt;
+        if (state.spawnTimer <= 0) {
+          spawnPipe();
+          state.spawnTimer = d.spawn;
+        }
+
+        for (let i = state.pipes.length - 1; i >= 0; i--) {
+          const p = state.pipes[i];
+          p.x -= d.speed * dt;
+          const topHeight = p.center - p.gap / 2;
+          const bottomY = p.center + p.gap / 2;
+          const pipeW = 76;
+
+          if (!p.scored && p.x + pipeW < bird.x) {
+            p.scored = true;
+            state.score++;
+            ui.score.textContent = state.score;
+            emitParticles(bird.x + 12, bird.y, 9, "cyan");
+            playTone("point");
+          }
+
+          if (
+            circleRectCollision(bird.x, bird.y, bird.r - 3, p.x, 0, pipeW, topHeight) ||
+            circleRectCollision(bird.x, bird.y, bird.r - 3, p.x, bottomY, pipeW, GROUND_Y - bottomY)
+          ) {
+            endGame();
+          }
+
+          if (p.x < -100) state.pipes.splice(i, 1);
+        }
+
+        if (bird.y - bird.r <= 0 || bird.y + bird.r >= GROUND_Y) endGame();
+      }
+
+      function roundedRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, r);
+      }
+
+      function drawBackground() {
+        const grad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+        grad.addColorStop(0, "#68dfff");
+        grad.addColorStop(.58, "#b7f3ff");
+        grad.addColorStop(1, "#fff0ad");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, GROUND_Y);
+
+        // Sun
+        ctx.fillStyle = "rgba(255,244,151,.85)";
+        ctx.beginPath(); ctx.arc(390, 105, 48, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,.18)";
+        ctx.beginPath(); ctx.arc(390, 105, 70, 0, Math.PI * 2); ctx.fill();
+
+        // Clouds
+        const cloudShift = -(state.scroll * .22);
+        for (let i = -1; i < 4; i++) {
+          const x = ((i * 175 + cloudShift) % 700) - 60;
+          const y = 100 + (i % 2) * 95;
+          ctx.fillStyle = "rgba(255,255,255,.76)";
+          ctx.beginPath();
+          ctx.arc(x, y, 26, 0, Math.PI * 2);
+          ctx.arc(x + 28, y - 13, 34, 0, Math.PI * 2);
+          ctx.arc(x + 64, y, 25, 0, Math.PI * 2);
+          ctx.roundRect(x - 18, y, 104, 28, 14);
+          ctx.fill();
+        }
+
+        // Distant hills
+        ctx.fillStyle = "#82d6aa";
+        ctx.beginPath();
+        ctx.moveTo(0, GROUND_Y);
+        for (let x = -80; x <= W + 80; x += 80) {
+          const yy = 530 + Math.sin((x + state.scroll * .12) * .018) * 22;
+          ctx.quadraticCurveTo(x + 40, yy - 42, x + 80, yy);
+        }
+        ctx.lineTo(W, GROUND_Y); ctx.closePath(); ctx.fill();
+
+        // City silhouettes
+        ctx.fillStyle = "rgba(51,139,135,.34)";
+        for (let x = -(state.scroll * .38 % 72) - 72; x < W + 72; x += 72) {
+          const bh = 45 + ((Math.floor(x / 72) * 29) % 70 + 70) % 70;
+          ctx.fillRect(x, GROUND_Y - bh, 50, bh);
+          ctx.fillRect(x + 9, GROUND_Y - bh - 13, 32, 13);
+        }
+      }
+
+      function drawPipes() {
+        for (const p of state.pipes) {
+          const pipeW = 76;
+          const topH = p.center - p.gap / 2;
+          const bottomY = p.center + p.gap / 2;
+          const capH = 28;
+
+          const pipeGrad = ctx.createLinearGradient(p.x, 0, p.x + pipeW, 0);
+          pipeGrad.addColorStop(0, "#158e51");
+          pipeGrad.addColorStop(.23, "#4be17d");
+          pipeGrad.addColorStop(.62, "#20b861");
+          pipeGrad.addColorStop(1, "#08733c");
+
+          ctx.fillStyle = pipeGrad;
+          ctx.strokeStyle = "#075b33";
+          ctx.lineWidth = 4;
+
+          // top body
+          ctx.fillRect(p.x + 8, 0, pipeW - 16, Math.max(0, topH - capH));
+          ctx.strokeRect(p.x + 8, -3, pipeW - 16, Math.max(0, topH - capH + 3));
+          roundedRect(p.x, topH - capH, pipeW, capH, 6);
+          ctx.fill(); ctx.stroke();
+
+          // bottom body
+          ctx.fillRect(p.x + 8, bottomY + capH, pipeW - 16, GROUND_Y - bottomY - capH);
+          ctx.strokeRect(p.x + 8, bottomY + capH, pipeW - 16, GROUND_Y - bottomY - capH + 3);
+          roundedRect(p.x, bottomY, pipeW, capH, 6);
+          ctx.fill(); ctx.stroke();
+
+          // highlights
+          ctx.fillStyle = "rgba(255,255,255,.23)";
+          ctx.fillRect(p.x + 17, 0, 8, Math.max(0, topH - capH));
+          ctx.fillRect(p.x + 17, bottomY + capH, 8, GROUND_Y - bottomY - capH);
+        }
+      }
+
+      function drawGround() {
+        ctx.fillStyle = "#80633c";
+        ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+        ctx.fillStyle = "#6ce054";
+        ctx.fillRect(0, GROUND_Y, W, 19);
+        ctx.fillStyle = "#b8f15f";
+        ctx.fillRect(0, GROUND_Y, W, 7);
+
+        const tile = 36;
+        for (let x = -(state.scroll % tile); x < W + tile; x += tile) {
+          ctx.fillStyle = ((Math.floor((x + state.scroll) / tile) & 1) ? "#a7834c" : "#94713f");
+          ctx.beginPath();
+          ctx.moveTo(x, GROUND_Y + 19);
+          ctx.lineTo(x + tile / 2, H);
+          ctx.lineTo(x + tile, GROUND_Y + 19);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      function drawBird() {
+        ctx.save();
+        ctx.translate(bird.x, bird.y);
+        ctx.rotate(bird.rotation);
+
+        // shadow
+        ctx.fillStyle = "rgba(0,0,0,.18)";
+        ctx.beginPath(); ctx.ellipse(3, 7, 24, 17, 0, 0, Math.PI * 2); ctx.fill();
+
+        // body
+        const bodyGrad = ctx.createLinearGradient(-18, -18, 18, 18);
+        bodyGrad.addColorStop(0, "#fff46d");
+        bodyGrad.addColorStop(1, "#ffad21");
+        ctx.fillStyle = bodyGrad;
+        ctx.strokeStyle = "#7c4b18";
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(0, 0, 22, 18, -.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+        // wing
+        const wingY = 7 + bird.wing * 7;
+        ctx.fillStyle = "#ffcb32";
+        ctx.beginPath(); ctx.ellipse(-8, wingY, 14, 8, -.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+        // eye
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.arc(9, -7, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#182238";
+        ctx.beginPath(); ctx.arc(12, -6, 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.arc(13, -7, 1.2, 0, Math.PI * 2); ctx.fill();
+
+        // beak
+        ctx.fillStyle = "#ff6a31";
+        ctx.beginPath();
+        ctx.moveTo(19, -3); ctx.lineTo(36, 2); ctx.lineTo(19, 8); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        ctx.restore();
+      }
+
+      function drawParticles() {
+        for (const p of state.particles) {
+          const alpha = Math.max(0, p.life / p.maxLife);
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = p.kind === "cyan" ? "#bffaff" : p.kind === "yellow" ? "#ffe75f" : "#ffffff";
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function draw() {
+        ctx.save();
+        if (state.shake > 0) {
+          ctx.translate((Math.random() - .5) * state.shake, (Math.random() - .5) * state.shake);
+        }
+        drawBackground();
+        drawPipes();
+        drawGround();
+        drawParticles();
+        drawBird();
+        ctx.restore();
+
+        if (state.flash > 0) {
+          ctx.fillStyle = `rgba(255,255,255,${state.flash})`;
+          ctx.fillRect(0, 0, W, H);
+        }
+      }
+
+      function loop(now) {
+        const dt = Math.min(.032, (now - state.lastTime) / 1000 || 0);
+        state.lastTime = now;
+        update(dt);
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      function openSettings() {
+        state.settingsReturn = state.mode === "playing" ? "playing" : (state.mode === "gameover" ? "gameover" : "menu");
+        if (state.mode === "playing") state.mode = "paused";
+        ui.settings.classList.remove("hidden");
+      }
+
+      function closeSettings() {
+        ui.settings.classList.add("hidden");
+        if (state.settingsReturn === "playing") state.mode = "playing";
+      }
+
+      function goHome() {
+        state.mode = "menu";
+        resetWorld();
+        ui.over.classList.add("hidden");
+        ui.settings.classList.add("hidden");
+        ui.menu.classList.remove("hidden");
+        updateBestLabels();
+      }
+
+      document.querySelectorAll(".difficulty").forEach(btn => {
+        btn.addEventListener("click", () => selectDifficulty(btn.dataset.difficulty));
+      });
+
+      document.getElementById("playButton").addEventListener("click", startGame);
+      document.getElementById("retryButton").addEventListener("click", startGame);
+      document.getElementById("homeButton").addEventListener("click", goHome);
+      document.getElementById("settingsButton").addEventListener("click", openSettings);
+      document.getElementById("menuSettingsButton").addEventListener("click", openSettings);
+      document.getElementById("closeSettingsButton").addEventListener("click", closeSettings);
+
+      ui.musicToggle.addEventListener("click", () => {
+        state.musicOn = !state.musicOn;
+        localStorage.setItem("skyFlapperMusic", String(state.musicOn));
+        updateSettingsUI();
+        ensureAudio();
+        syncMusic();
+      });
+
+      ui.sfxToggle.addEventListener("click", () => {
+        state.sfxOn = !state.sfxOn;
+        localStorage.setItem("skyFlapperSfx", String(state.sfxOn));
+        updateSettingsUI();
+        if (state.sfxOn) playTone("point");
+      });
+
+      ui.volumeSlider.addEventListener("input", () => {
+        state.volume = Number(ui.volumeSlider.value);
+        localStorage.setItem("skyFlapperVolume", String(state.volume));
+        updateSettingsUI();
+      });
+
+      document.getElementById("resetScoresButton").addEventListener("click", () => {
+        if (!confirm("Reset all Easy, Normal, and Hard high scores?")) return;
+        ["easy", "normal", "hard"].forEach(mode => localStorage.removeItem(`skyFlapperBest_${mode}`));
+        updateBestLabels();
+        playTone("point");
+      });
+
+      function handleFlapInput(event) {
+        const target = event.target;
+        if (target.closest && target.closest("button, input, .screen:not(.hidden)")) return;
+        if (state.mode === "playing") flap();
+      }
+
+      canvas.addEventListener("pointerdown", handleFlapInput);
+      document.addEventListener("keydown", event => {
+        if (["Space", "ArrowUp", "KeyW"].includes(event.code)) {
+          event.preventDefault();
+          if (state.mode === "playing") flap();
+        }
+        if (event.code === "Escape" && !ui.settings.classList.contains("hidden")) closeSettings();
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && state.mode === "playing") {
+          state.settingsReturn = "playing";
+          state.mode = "paused";
+          ui.settings.classList.remove("hidden");
+        }
+      });
+
+      selectDifficulty(state.difficulty in difficulties ? state.difficulty : "normal");
+      updateBestLabels();
+      updateSettingsUI();
+      resetWorld();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

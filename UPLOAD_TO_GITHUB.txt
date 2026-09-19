@@ -1,0 +1,18 @@
+GITHUB PAGES QUICK START
+
+1. Extract the ZIP.
+2. Create a GitHub repository.
+3. Upload ALL files/folders from Game_Library_GitHub_Pages into the repository root.
+4. Commit to main.
+5. GitHub: Settings > Pages.
+6. Source: Deploy from a branch.
+7. Branch: main.
+8. Folder: /(root).
+9. Save.
+
+Expected website:
+https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/
+
+IMPORTANT:
+index.html must be in the repository root.
+Do not upload only the ZIP file to the repository.

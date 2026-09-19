@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Block Stack 3D</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    body {
+        overflow: hidden;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(#87ddff, #eafaff);
+        touch-action: manipulation;
+    }
+
+    canvas {
+        display: block;
+    }
+
+    #ui {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    #title {
+        position: absolute;
+        top: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-size: 24px;
+        font-weight: 900;
+        text-shadow: 0 3px 7px rgba(0,0,0,.25);
+    }
+
+    #score {
+        position: absolute;
+        top: 49px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 54px;
+        color: white;
+        font-weight: 900;
+        text-shadow: 0 3px 7px rgba(0,0,0,.25);
+    }
+
+    #record {
+        position: absolute;
+        top: 108px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-size: 15px;
+        font-weight: bold;
+        text-shadow: 0 2px 5px rgba(0,0,0,.25);
+    }
+
+    #streak {
+        position: absolute;
+        top: 135px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        opacity: 0;
+        transition: .15s;
+        text-shadow: 0 2px 5px rgba(0,0,0,.25);
+    }
+
+    #perfectText {
+        position: absolute;
+        top: 42%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(.7);
+        color: white;
+        font-size: 42px;
+        font-weight: 900;
+        opacity: 0;
+        text-shadow: 0 5px 12px rgba(0,0,0,.25);
+        transition: opacity .12s, transform .12s;
+    }
+
+    #perfectText.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    #instructions {
+        position: absolute;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+        text-shadow: 0 2px 5px rgba(0,0,0,.25);
+    }
+
+    #menu,
+    #gameOver {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(20,40,60,.22);
+        backdrop-filter: blur(5px);
+        pointer-events: auto;
+    }
+
+    #gameOver {
+        display: none;
+    }
+
+    .panel {
+        width: min(380px, 90vw);
+        padding: 28px;
+        border-radius: 22px;
+        background: rgba(255,255,255,.95);
+        box-shadow: 0 18px 60px rgba(0,0,0,.22);
+        text-align: center;
+    }
+
+    .panel h1 {
+        font-size: 32px;
+        margin-bottom: 8px;
+        color: #222;
+    }
+
+    .panel p {
+        color: #666;
+        margin: 6px;
+    }
+
+    #difficultyButtons {
+        display: flex;
+        gap: 10px;
+        margin-top: 22px;
+    }
+
+    .difficulty {
+        flex: 1;
+        border: 0;
+        border-radius: 13px;
+        padding: 16px 8px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 900;
+        transition: transform .12s;
+    }
+
+    .difficulty:hover {
+        transform: translateY(-2px);
+    }
+
+    .difficulty:active {
+        transform: scale(.96);
+    }
+
+    #easy {
+        background: #70e090;
+        color: #153c21;
+    }
+
+    #normal {
+        background: #ffd05c;
+        color: #493600;
+    }
+
+    #hard {
+        background: #ff6666;
+        color: white;
+    }
+
+    .smallRecord {
+        display: block;
+        margin-top: 5px;
+        font-size: 11px;
+        opacity: .75;
+    }
+
+    #finalScore {
+        font-size: 54px;
+        font-weight: 900;
+        color: #222;
+        margin-top: 8px;
+    }
+
+    #newRecord {
+        color: #ff9b00;
+        font-size: 20px;
+        font-weight: 900;
+        margin: 10px 0;
+        display: none;
+    }
+
+    #restart,
+    #menuButton {
+        width: 100%;
+        border: 0;
+        padding: 14px;
+        border-radius: 12px;
+        margin-top: 10px;
+        font-size: 17px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    #restart {
+        background: #222;
+        color: white;
+    }
+
+    #menuButton {
+        background: #e8e8e8;
+        color: #333;
+    }
+</style>
+</head>
+
+<body>
+
+<div id="ui">
+
+    <div id="title">BLOCK STACK</div>
+    <div id="score">0</div>
+    <div id="record">RECORD: 0</div>
+    <div id="streak">PERFECT x2</div>
+
+    <div id="perfectText">PERFECT!</div>
+
+    <div id="instructions">
+        CLICK • TAP • SPACE
+    </div>
+
+    <div id="menu">
+
+        <div class="panel">
+
+            <h1>Block Stack</h1>
+            <p>Choose a difficulty</p>
+
+            <div id="difficultyButtons">
+
+                <button class="difficulty" id="easy">
+                    EASY
+                    <span class="smallRecord" id="easyRecord">
+                        Record: 0
+                    </span>
+                </button>
+
+                <button class="difficulty" id="normal">
+                    NORMAL
+                    <span class="smallRecord" id="normalRecord">
+                        Record: 0
+                    </span>
+                </button>
+
+                <button class="difficulty" id="hard">
+                    HARD
+                    <span class="smallRecord" id="hardRecord">
+                        Record: 0
+                    </span>
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="gameOver">
+
+        <div class="panel">
+
+            <h1>Game Over</h1>
+
+            <p>You stacked</p>
+
+            <div id="finalScore">0</div>
+
+            <p>blocks</p>
+
+            <div id="newRecord">
+                🏆 NEW RECORD!
+            </div>
+
+            <button id="restart">
+                PLAY AGAIN
+            </button>
+
+            <button id="menuButton">
+                CHANGE DIFFICULTY
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<script>
+
+/* ==================================================
+   BLOCK STACK 3D
+================================================== */
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x8bdcff);
+
+scene.fog = new THREE.Fog(
+    0x8bdcff,
+    25,
+    70
+);
+
+
+/* ==================================================
+   CAMERA
+================================================== */
+
+const camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    .1,
+    1000
+);
+
+camera.position.set(8, 8, 12);
+
+
+/* ==================================================
+   RENDERER
+================================================== */
+
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2)
+);
+
+renderer.shadowMap.enabled = true;
+
+document.body.appendChild(
+    renderer.domElement
+);
+
+
+/* ==================================================
+   LIGHTS
+================================================== */
+
+const ambient = new THREE.HemisphereLight(
+    0xffffff,
+    0x557799,
+    2.2
+);
+
+scene.add(ambient);
+
+const sun = new THREE.DirectionalLight(
+    0xffffff,
+    2.5
+);
+
+sun.position.set(
+    10,
+    20,
+    10
+);
+
+sun.castShadow = true;
+
+scene.add(sun);
+
+
+/* ==================================================
+   SETTINGS
+================================================== */
+
+const BLOCK_HEIGHT = .65;
+const START_SIZE = 5;
+const MOVE_DISTANCE = 7;
+
+let difficulty = "normal";
+
+let speed = .055;
+
+let score = 0;
+
+let blocks = [];
+
+let fallingPieces = [];
+
+let currentBlock = null;
+
+let playing = false;
+
+let moveAxis = "x";
+
+let direction = 1;
+
+let cameraTargetY = 2;
+
+let perfectStreak = 0;
+
+
+/* ==================================================
+   DIFFICULTY SETTINGS
+================================================== */
+
+const difficultySettings = {
+
+    easy: {
+        startingSpeed: .035,
+        speedIncrease: .0007,
+        maxSpeed: .065,
+        perfectTolerance: .18
+    },
+
+    normal: {
+        startingSpeed: .052,
+        speedIncrease: .002,
+        maxSpeed: .135,
+        perfectTolerance: .13
+    },
+
+    hard: {
+        startingSpeed: .11,
+        speedIncrease: .003,
+        maxSpeed: .22,
+        perfectTolerance: .09
+    }
+
+};
+
+
+/* ==================================================
+   RECORDS
+================================================== */
+
+function getRecord(mode) {
+
+    return Number(
+        localStorage.getItem(
+            "stackRecord_" + mode
+        ) || 0
+    );
+}
+
+
+function setRecord(mode, value) {
+
+    localStorage.setItem(
+        "stackRecord_" + mode,
+        value
+    );
+}
+
+
+function updateMenuRecords() {
+
+    easyRecord.textContent =
+        "Record: " + getRecord("easy");
+
+    normalRecord.textContent =
+        "Record: " + getRecord("normal");
+
+    hardRecord.textContent =
+        "Record: " + getRecord("hard");
+}
+
+
+updateMenuRecords();
+
+
+/* ==================================================
+   UI
+================================================== */
+
+const scoreText =
+    document.getElementById("score");
+
+const recordText =
+    document.getElementById("record");
+
+const perfectText =
+    document.getElementById("perfectText");
+
+const streakText =
+    document.getElementById("streak");
+
+const menu =
+    document.getElementById("menu");
+
+const gameOver =
+    document.getElementById("gameOver");
+
+const finalScore =
+    document.getElementById("finalScore");
+
+const newRecord =
+    document.getElementById("newRecord");
+
+
+/* ==================================================
+   AUDIO
+================================================== */
+
+let audioContext = null;
+
+
+function ensureAudio() {
+
+    if (!audioContext) {
+
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+    }
+
+}
+
+
+function playPerfectDing() {
+
+    ensureAudio();
+
+    const oscillator =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+
+    /*
+       Each perfect in a row
+       increases the pitch.
+    */
+
+    const basePitch = 500;
+
+    const pitch =
+        Math.min(
+            basePitch +
+            perfectStreak * 90,
+            1400
+        );
+
+
+    oscillator.frequency.value =
+        pitch;
+
+    oscillator.type =
+        "sine";
+
+
+    gain.gain.setValueAtTime(
+        .18,
+        audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audioContext.currentTime + .32
+    );
+
+
+    oscillator.connect(gain);
+
+    gain.connect(
+        audioContext.destination
+    );
+
+
+    oscillator.start();
+
+    oscillator.stop(
+        audioContext.currentTime + .33
+    );
+
+}
+
+
+/* ==================================================
+   BLOCK COLORS
+================================================== */
+
+function blockColor(level) {
+
+    const hue =
+        (level * 20) % 360;
+
+    return new THREE.Color(
+        `hsl(${hue},75%,58%)`
+    );
+}
+
+
+/* ==================================================
+   CREATE BLOCK
+================================================== */
+
+function createBlock(
+    x,
+    y,
+    z,
+    width,
+    depth,
+    level
+) {
+
+    const geometry =
+        new THREE.BoxGeometry(
+            width,
+            BLOCK_HEIGHT,
+            depth
+        );
+
+    const material =
+        new THREE.MeshStandardMaterial({
+
+            color:
+                blockColor(level),
+
+            roughness: .5,
+
+            metalness: .05
+
+        });
+
+
+    const block =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+
+    block.position.set(
+        x,
+        y,
+        z
+    );
+
+
+    block.castShadow = true;
+
+    block.receiveShadow = true;
+
+
+    block.userData = {
+
+        width: width,
+
+        depth: depth,
+
+        level: level
+
+    };
+
+
+    scene.add(block);
+
+    return block;
+}
+
+
+/* ==================================================
+   BASE
+================================================== */
+
+function createBase() {
+
+    const base =
+        createBlock(
+            0,
+            0,
+            0,
+            START_SIZE,
+            START_SIZE,
+            0
+        );
+
+    blocks.push(base);
+}
+
+
+/* ==================================================
+   NEW MOVING BLOCK
+================================================== */
+
+function spawnBlock() {
+
+    const previous =
+        blocks[
+            blocks.length - 1
+        ];
+
+
+    moveAxis =
+        blocks.length % 2 === 1
+        ? "x"
+        : "z";
+
+
+    const y =
+        blocks.length *
+        BLOCK_HEIGHT;
+
+
+    let x =
+        previous.position.x;
+
+    let z =
+        previous.position.z;
+
+
+    if (moveAxis === "x") {
+
+        x -= MOVE_DISTANCE;
+
+    } else {
+
+        z -= MOVE_DISTANCE;
+
+    }
+
+
+    direction = 1;
+
+
+    currentBlock =
+        createBlock(
+
+            x,
+
+            y,
+
+            z,
+
+            previous.userData.width,
+
+            previous.userData.depth,
+
+            blocks.length
+
+        );
+}
+
+
+/* ==================================================
+   PERFECT
+================================================== */
+
+function doPerfect(previous) {
+
+    perfectStreak++;
+
+    currentBlock.position[moveAxis] =
+        previous.position[moveAxis];
+
+
+    showPerfect();
+
+    playPerfectDing();
+
+}
+
+
+function showPerfect() {
+
+    perfectText.textContent =
+        perfectStreak > 1
+        ? "PERFECT x" + perfectStreak + "!"
+        : "PERFECT!";
+
+
+    perfectText.classList.add(
+        "show"
+    );
+
+
+    if (perfectStreak >= 2) {
+
+        streakText.textContent =
+            "PERFECT STREAK x" +
+            perfectStreak;
+
+        streakText.style.opacity =
+            "1";
+
+    }
+
+
+    clearTimeout(
+        showPerfect.timer
+    );
+
+
+    showPerfect.timer =
+        setTimeout(() => {
+
+            perfectText.classList.remove(
+                "show"
+            );
+
+        }, 500);
+
+}
+
+
+/* ==================================================
+   PLACE BLOCK
+================================================== */
+
+function placeBlock() {
+
+    if (
+        !playing ||
+        !currentBlock
+    ) return;
+
+
+    const previous =
+        blocks[
+            blocks.length - 1
+        ];
+
+
+    const axis =
+        moveAxis;
+
+
+    const sizeName =
+        axis === "x"
+        ? "width"
+        : "depth";
+
+
+    const currentPosition =
+        currentBlock.position[axis];
+
+
+    const previousPosition =
+        previous.position[axis];
+
+
+    const currentSize =
+        currentBlock.userData[
+            sizeName
+        ];
+
+
+    const difference =
+        currentPosition -
+        previousPosition;
+
+
+    const overlap =
+        currentSize -
+        Math.abs(difference);
+
+
+    /* =============================
+       MISS
+    ============================= */
+
+    if (overlap <= 0) {
+
+        perfectStreak = 0;
+
+        dropWholeBlock(
+            currentBlock
+        );
+
+        currentBlock = null;
+
+        endGame();
+
+        return;
+    }
+
+
+    /* =============================
+       PERFECT
+    ============================= */
+
+    const tolerance =
+        difficultySettings[
+            difficulty
+        ].perfectTolerance;
+
+
+    if (
+        Math.abs(difference)
+        <= tolerance
+    ) {
+
+        doPerfect(previous);
+
+
+        blocks.push(
+            currentBlock
+        );
+
+
+        currentBlock = null;
+
+        score++;
+
+        updateScore();
+
+        updateSpeed();
+
+        spawnBlock();
+
+        return;
+    }
+
+
+    /* =============================
+       NOT PERFECT
+    ============================= */
+
+    perfectStreak = 0;
+
+    streakText.style.opacity =
+        "0";
+
+
+    /* =============================
+       CUT THE BLOCK
+    ============================= */
+
+    const oldSize =
+        currentBlock.userData[
+            sizeName
+        ];
+
+
+    const newSize =
+        overlap;
+
+
+    const newPosition =
+        previousPosition +
+        difference / 2;
+
+
+    const choppedSize =
+        oldSize -
+        newSize;
+
+
+    const choppedPosition =
+        currentPosition +
+        (
+            difference > 0
+            ? 1
+            : -1
+        ) *
+        (
+            newSize / 2 +
+            choppedSize / 2
+        );
+
+
+    const width =
+        axis === "x"
+        ? newSize
+        : currentBlock.userData.width;
+
+
+    const depth =
+        axis === "z"
+        ? newSize
+        : currentBlock.userData.depth;
+
+
+    currentBlock.geometry.dispose();
+
+
+    currentBlock.geometry =
+        new THREE.BoxGeometry(
+
+            width,
+
+            BLOCK_HEIGHT,
+
+            depth
+
+        );
+
+
+    currentBlock.position[axis] =
+        newPosition;
+
+
+    currentBlock.userData.width =
+        width;
+
+
+    currentBlock.userData.depth =
+        depth;
+
+
+    /* =============================
+       FALLING CUT-OFF PIECE
+    ============================= */
+
+    let fallingWidth =
+        axis === "x"
+        ? choppedSize
+        : width;
+
+
+    let fallingDepth =
+        axis === "z"
+        ? choppedSize
+        : depth;
+
+
+    let fx =
+        currentBlock.position.x;
+
+
+    let fz =
+        currentBlock.position.z;
+
+
+    if (axis === "x") {
+
+        fx = choppedPosition;
+
+    } else {
+
+        fz = choppedPosition;
+
+    }
+
+
+    createFallingPiece(
+
+        fx,
+
+        currentBlock.position.y,
+
+        fz,
+
+        fallingWidth,
+
+        fallingDepth,
+
+        currentBlock.userData.level
+
+    );
+
+
+    blocks.push(
+        currentBlock
+    );
+
+
+    currentBlock = null;
+
+
+    score++;
+
+    updateScore();
+
+    updateSpeed();
+
+    spawnBlock();
+}
+
+
+/* ==================================================
+   FALLING PIECES
+================================================== */
+
+function createFallingPiece(
+    x,
+    y,
+    z,
+    width,
+    depth,
+    level
+) {
+
+    if (
+        width <= 0 ||
+        depth <= 0
+    ) return;
+
+
+    const piece =
+        createBlock(
+
+            x,
+
+            y,
+
+            z,
+
+            width,
+
+            depth,
+
+            level
+
+        );
+
+
+    piece.userData.velocityY =
+        0;
+
+
+    piece.userData.rotationX =
+        (Math.random() - .5)
+        * .05;
+
+
+    piece.userData.rotationZ =
+        (Math.random() - .5)
+        * .05;
+
+
+    fallingPieces.push(
+        piece
+    );
+}
+
+
+function dropWholeBlock(
+    block
+) {
+
+    block.userData.velocityY =
+        0;
+
+
+    block.userData.rotationX =
+        (Math.random() - .5)
+        * .05;
+
+
+    block.userData.rotationZ =
+        (Math.random() - .5)
+        * .05;
+
+
+    fallingPieces.push(
+        block
+    );
+}
+
+
+/* ==================================================
+   FALLING PHYSICS
+================================================== */
+
+function updateFallingPieces() {
+
+    for (
+        let i =
+            fallingPieces.length - 1;
+
+        i >= 0;
+
+        i--
+    ) {
+
+        const piece =
+            fallingPieces[i];
+
+
+        piece.userData.velocityY
+            -= .009;
+
+
+        piece.position.y +=
+            piece.userData.velocityY;
+
+
+        piece.rotation.x +=
+            piece.userData.rotationX;
+
+
+        piece.rotation.z +=
+            piece.userData.rotationZ;
+
+
+        if (
+            piece.position.y
+            < -15
+        ) {
+
+            scene.remove(piece);
+
+            piece.geometry.dispose();
+
+            piece.material.dispose();
+
+            fallingPieces.splice(
+                i,
+                1
+            );
+        }
+    }
+}
+
+
+/* ==================================================
+   MOVING BLOCK
+================================================== */
+
+function updateMovingBlock() {
+
+    if (
+        !playing ||
+        !currentBlock
+    ) return;
+
+
+    currentBlock.position[
+        moveAxis
+    ] +=
+        speed *
+        direction;
+
+
+    const previous =
+        blocks[
+            blocks.length - 1
+        ];
+
+
+    const center =
+        previous.position[
+            moveAxis
+        ];
+
+
+    if (
+        currentBlock.position[
+            moveAxis
+        ] >
+        center +
+        MOVE_DISTANCE
+    ) {
+
+        direction = -1;
+
+    }
+
+
+    if (
+        currentBlock.position[
+            moveAxis
+        ] <
+        center -
+        MOVE_DISTANCE
+    ) {
+
+        direction = 1;
+
+    }
+}
+
+
+/* ==================================================
+   SPEED
+================================================== */
+
+function updateSpeed() {
+
+    const settings =
+        difficultySettings[
+            difficulty
+        ];
+
+
+    speed =
+        settings.startingSpeed +
+        score *
+        settings.speedIncrease;
+
+
+    speed =
+        Math.min(
+
+            speed,
+
+            settings.maxSpeed
+
+        );
+}
+
+
+/* ==================================================
+   SCORE
+================================================== */
+
+function updateScore() {
+
+    scoreText.textContent =
+        score;
+
+
+    const currentRecord =
+        getRecord(
+            difficulty
+        );
+
+
+    recordText.textContent =
+        "RECORD: " +
+        currentRecord;
+
+
+    cameraTargetY =
+        Math.max(
+            2,
+            score *
+            BLOCK_HEIGHT
+        );
+}
+
+
+/* ==================================================
+   CAMERA
+================================================== */
+
+function updateCamera() {
+
+    const targetY =
+        cameraTargetY + 6;
+
+
+    camera.position.y +=
+        (
+            targetY -
+            camera.position.y
+        ) *
+        .045;
+
+
+    camera.lookAt(
+
+        0,
+
+        cameraTargetY,
+
+        0
+
+    );
+}
+
+
+/* ==================================================
+   START GAME
+================================================== */
+
+function startGame(mode) {
+
+    difficulty =
+        mode;
+
+
+    cleanupGame();
+
+
+    score = 0;
+
+    perfectStreak = 0;
+
+    cameraTargetY = 2;
+
+    playing = true;
+
+
+    speed =
+        difficultySettings[
+            difficulty
+        ].startingSpeed;
+
+
+    scoreText.textContent =
+        "0";
+
+
+    recordText.textContent =
+        "RECORD: " +
+        getRecord(
+            difficulty
+        );
+
+
+    streakText.style.opacity =
+        "0";
+
+
+    menu.style.display =
+        "none";
+
+
+    gameOver.style.display =
+        "none";
+
+
+    camera.position.set(
+        8,
+        8,
+        12
+    );
+
+
+    createBase();
+
+    spawnBlock();
+}
+
+
+/* ==================================================
+   GAME OVER
+================================================== */
+
+function endGame() {
+
+    playing = false;
+
+
+    finalScore.textContent =
+        score;
+
+
+    const oldRecord =
+        getRecord(
+            difficulty
+        );
+
+
+    if (
+        score > oldRecord
+    ) {
+
+        setRecord(
+            difficulty,
+            score
+        );
+
+
+        newRecord.style.display =
+            "block";
+
+    } else {
+
+        newRecord.style.display =
+            "none";
+
+    }
+
+
+    updateMenuRecords();
+
+
+    recordText.textContent =
+        "RECORD: " +
+        Math.max(
+            score,
+            oldRecord
+        );
+
+
+    setTimeout(() => {
+
+        gameOver.style.display =
+            "flex";
+
+    }, 600);
+}
+
+
+/* ==================================================
+   CLEAN UP
+================================================== */
+
+function cleanupGame() {
+
+    blocks.forEach(
+        block => {
+
+            scene.remove(block);
+
+            block.geometry.dispose();
+
+            block.material.dispose();
+
+        }
+    );
+
+
+    fallingPieces.forEach(
+        piece => {
+
+            scene.remove(piece);
+
+            piece.geometry.dispose();
+
+            piece.material.dispose();
+
+        }
+    );
+
+
+    if (
+        currentBlock &&
+        !blocks.includes(
+            currentBlock
+        ) &&
+        !fallingPieces.includes(
+            currentBlock
+        )
+    ) {
+
+        scene.remove(
+            currentBlock
+        );
+
+        currentBlock.geometry.dispose();
+
+        currentBlock.material.dispose();
+    }
+
+
+    blocks = [];
+
+    fallingPieces = [];
+
+    currentBlock = null;
+}
+
+
+/* ==================================================
+   BUTTONS
+================================================== */
+
+document.getElementById(
+    "easy"
+).onclick = () => {
+
+    ensureAudio();
+
+    startGame("easy");
+
+};
+
+
+document.getElementById(
+    "normal"
+).onclick = () => {
+
+    ensureAudio();
+
+    startGame("normal");
+
+};
+
+
+document.getElementById(
+    "hard"
+).onclick = () => {
+
+    ensureAudio();
+
+    startGame("hard");
+
+};
+
+
+document.getElementById(
+    "restart"
+).onclick = event => {
+
+    event.stopPropagation();
+
+    startGame(
+        difficulty
+    );
+
+};
+
+
+document.getElementById(
+    "menuButton"
+).onclick = event => {
+
+    event.stopPropagation();
+
+    cleanupGame();
+
+    playing = false;
+
+    gameOver.style.display =
+        "none";
+
+    menu.style.display =
+        "flex";
+
+};
+
+
+/* ==================================================
+   PLAYER INPUT
+================================================== */
+
+window.addEventListener(
+    "pointerdown",
+    event => {
+
+        if (
+            event.target.closest(
+                "button"
+            )
+        ) return;
+
+
+        if (
+            playing
+        ) {
+
+            ensureAudio();
+
+            placeBlock();
+
+        }
+    }
+);
+
+
+window.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.code === "Space" &&
+            playing
+        ) {
+
+            event.preventDefault();
+
+            ensureAudio();
+
+            placeBlock();
+
+        }
+    }
+);
+
+
+/* ==================================================
+   RESIZE
+================================================== */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+
+        camera.updateProjectionMatrix();
+
+
+        renderer.setSize(
+
+            window.innerWidth,
+
+            window.innerHeight
+
+        );
+    }
+);
+
+
+/* ==================================================
+   LOOP
+================================================== */
+
+function animate() {
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    updateMovingBlock();
+
+    updateFallingPieces();
+
+    updateCamera();
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+}
+
+
+animate();
+
+</script>
+
+</body>
+</html>

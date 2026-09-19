@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Game Library</title>
+<meta name="description" content="A personal library of HTML games and creative apps.">
+<meta name="theme-color" content="#080b12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="./icons/icon-64.png">
+<link rel="apple-touch-icon" href="./icons/icon-180.png">
+<style>
+:root{
+  --bg:#080b12;--panel:#111722;--panel2:#171f2d;--line:rgba(255,255,255,.1);
+  --line2:rgba(255,255,255,.18);--text:#f7f9ff;--muted:#9ca9bc;
+  --accent:#6ee7ff;--purple:#8e6cff;--good:#7ef2a5;--gold:#ffd66a
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;background:
+radial-gradient(circle at 12% 0%,rgba(61,129,255,.18),transparent 29rem),
+radial-gradient(circle at 92% 12%,rgba(151,76,255,.13),transparent 27rem),var(--bg);color:var(--text)}
+button,a,input,select,textarea{font:inherit}button,a{-webkit-tap-highlight-color:transparent}button{color:inherit}
+body{min-height:100vh}.hidden{display:none!important}
+
+header{position:sticky;top:0;z-index:30;padding:13px clamp(14px,3vw,34px);background:rgba(8,11,18,.88);border-bottom:1px solid var(--line);backdrop-filter:blur(18px)}
+.header-row{max-width:1260px;margin:auto;display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:11px;margin-right:auto;min-width:0}
+.brand-logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:23px;background:linear-gradient(145deg,var(--accent),var(--purple));box-shadow:0 10px 28px rgba(80,94,255,.28)}
+.brand h1{margin:0;font-size:18px}.brand small{display:block;color:var(--muted);margin-top:2px}
+.top-btn{border:1px solid var(--line);background:#151c28;border-radius:12px;padding:10px 12px;font-weight:850;cursor:pointer;text-decoration:none;color:white}
+.top-btn:hover{background:#202a3a}.top-btn.help{background:#173020;border-color:#285037;color:#c9f6d7}.top-btn.install{display:none;background:#153047;border-color:#28526f;color:#ccefff}
+.top-btn.install.show{display:inline-flex}
+.web-status{display:inline-flex;align-items:center;gap:6px;color:#9ca9bc;font-size:10px;font-weight:850}
+.web-status i{width:8px;height:8px;border-radius:50%;background:#7ef2a5;box-shadow:0 0 10px rgba(126,242,165,.6)}
+.web-status.offline i{background:#ff7373;box-shadow:0 0 10px rgba(255,115,115,.5)}
+.search{width:min(300px,32vw);border:1px solid var(--line);border-radius:999px;background:#111722;color:white;padding:11px 15px;outline:none}
+.search:focus{border-color:rgba(110,231,255,.55);box-shadow:0 0 0 3px rgba(110,231,255,.08)}
+
+main{max-width:1260px;margin:auto;padding:28px clamp(14px,3vw,34px) 70px}
+.hero{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end;margin:5px 0 22px}
+.eyebrow{color:var(--accent);font-weight:900;letter-spacing:.12em;text-transform:uppercase;font-size:11px}
+.hero h2{font-size:clamp(36px,7vw,66px);letter-spacing:-.06em;line-height:.9;margin:8px 0 10px}
+.hero p{color:var(--muted);margin:0;max-width:700px;line-height:1.55}
+.statbox{display:flex;gap:9px}.stat{min-width:84px;padding:12px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.045);text-align:center}
+.stat b{display:block;font-size:22px}.stat small{color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800}
+
+.toolbar{display:flex;align-items:center;gap:10px;margin:18px 0;flex-wrap:wrap}
+.categories{display:flex;gap:7px;flex-wrap:wrap;flex:1}
+.chip{border:1px solid var(--line);background:#131a26;color:var(--muted);border-radius:999px;padding:9px 12px;font-size:12px;font-weight:900;cursor:pointer}
+.chip:hover{color:#fff;border-color:var(--line2)}.chip.active{color:#081016;background:var(--accent);border-color:transparent}
+.sort{border:1px solid var(--line);background:#131a26;color:white;border-radius:11px;padding:9px 11px;outline:none}
+
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:24px 0 12px}
+.section-head h3{margin:0;font-size:19px}.section-head span{color:var(--muted);font-size:12px}
+.library{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:14px}
+.app-card{min-height:218px;padding:17px;border:1px solid var(--line);border-radius:23px;background:linear-gradient(145deg,rgba(255,255,255,.066),rgba(255,255,255,.024));display:flex;gap:15px;align-items:flex-start;position:relative;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.14);transition:.17s}
+.app-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.07)}
+.app-icon{flex:none;width:70px;height:70px;border-radius:20px;display:grid;place-items:center;font-size:37px;box-shadow:inset 0 1px rgba(255,255,255,.25),0 12px 30px rgba(0,0,0,.22);background:linear-gradient(145deg,#6ee7ff,#8e6cff)}
+.app-info{min-width:0;flex:1}.app-top{display:flex;align-items:center;gap:7px;min-height:18px;flex-wrap:wrap}
+.category{color:var(--muted);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.09em}
+.version{color:#cdd7e7;font-size:9px;padding:3px 6px;border-radius:999px;border:1px solid var(--line);background:#19212e;font-weight:900}
+.new-badge{background:var(--good);color:#082113;border-radius:999px;padding:3px 6px;font-size:9px;font-weight:1000}
+.app-card h2{margin:5px 0;font-size:21px}.app-desc{color:var(--muted);font-size:12px;line-height:1.42;min-height:36px;margin-bottom:8px}
+.updated{color:#768399;font-size:10px;margin-bottom:12px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.play-btn,.download-btn,.fav-btn,.log-btn,.viewer-btn{border:0;border-radius:11px;padding:9px 11px;font-size:12px;font-weight:950;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.play-btn{color:#071018;background:linear-gradient(90deg,var(--accent),#c8f9ff)}
+.download-btn,.fav-btn,.log-btn{color:white;background:#232d3e;border:1px solid var(--line)}
+.log-btn{color:#d8d0ff;background:#24203b;border-color:#3a345c}
+.fav-btn.active{background:#413221;border-color:#69502b;color:var(--gold)}
+.empty{display:none;color:var(--muted);padding:38px 5px}
+
+.recent-grid{display:flex;gap:10px;overflow:auto;padding-bottom:5px}.recent-item{flex:0 0 205px;border:1px solid var(--line);border-radius:16px;background:#111722;padding:11px;display:flex;gap:10px;align-items:center;cursor:pointer}
+.recent-item:hover{background:#182131}.recent-icon{width:41px;height:41px;border-radius:12px;display:grid;place-items:center;background:#202a3a;font-size:21px}
+.recent-title{font-weight:900;font-size:12px}.recent-cat{color:var(--muted);font-size:10px;margin-top:3px}
+
+#viewer{position:fixed;inset:0;z-index:60;background:#05070b;display:none;grid-template-rows:60px 1fr}
+#viewer.show{display:grid}.viewer-bar{display:flex;align-items:center;gap:9px;padding:8px 11px;background:#10151f;border-bottom:1px solid var(--line)}
+.viewer-title{font-weight:900;margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewer-btn{color:white;background:#222b3a;border:1px solid var(--line)}.viewer-btn.primary{color:#071018;background:var(--accent)}
+#frame{width:100%;height:100%;border:0;background:white}
+
+.modal{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)}
+.modal.show{display:flex}.modal-card{width:min(720px,96vw);max-height:88vh;overflow:auto;background:#111722;border:1px solid var(--line2);border-radius:24px;padding:23px;box-shadow:0 30px 100px rgba(0,0,0,.55)}
+.modal-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px}.modal-head h2{margin:0;font-size:27px}.modal-head button{margin-left:auto}
+.update{padding:15px 0;border-top:1px solid var(--line)}.update:first-of-type{border-top:0}
+.update-date{color:var(--accent);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
+.update h3{margin:5px 0 7px;font-size:17px}.update ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.65}
+.game-log-meta{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 16px}.meta-pill{padding:6px 9px;border:1px solid var(--line);background:#171f2d;border-radius:999px;color:#cfd8e6;font-size:11px;font-weight:800}
+.help-box{display:grid;gap:12px}
+.help-option{padding:14px;border:1px solid var(--line);border-radius:16px;background:#161e2b}
+.help-option h3{margin:0 0 5px;font-size:16px}.help-option p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.help-email{display:inline-flex;margin-top:10px;color:#071018;background:var(--good);padding:10px 13px;border-radius:11px;font-weight:950;text-decoration:none}
+.note{margin-top:25px;color:var(--muted);font-size:11px;line-height:1.55}
+
+@media(max-width:760px){
+ .header-row{flex-wrap:wrap}.search{order:5;width:100%}.hero{grid-template-columns:1fr}
+ .app-card{min-height:205px}.app-icon{width:61px;height:61px;font-size:31px}.viewer-title{max-width:28vw}
+ .top-btn{padding:9px 10px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<header>
+<div class="header-row">
+  <div class="brand"><div class="brand-logo">🎮</div><div><h1>My Game Library</h1><small>Your games in one place</small></div></div>
+  <button id="installBtn" class="top-btn install" type="button">⬇ Install App</button>
+  <button class="top-btn help" onclick="showHelp()">❓ Help</button>
+  <button class="top-btn" onclick="showUpdates()">📢 Updates</button>
+  <div id="webStatus" class="web-status"><i></i><span>Online</span></div>
+  <input id="search" class="search" placeholder="Search games, categories..." autocomplete="off">
+</div>
+</header>
+
+<main>
+<section class="hero">
+<div>
+  <div class="eyebrow">Game Hub Web v5.0</div>
+  <h2>Choose what to play.</h2>
+  <p>Now built for the web. Search, filter, favorite, install the Game Library like an app, play games in the browser, check update logs, or download individual HTML games.</p>
+</div>
+<div class="statbox">
+  <div class="stat"><b id="gameCount">8</b><small>Games</small></div>
+  <div class="stat"><b id="favCount">0</b><small>Favorites</small></div>
+</div>
+</section>
+
+<div class="toolbar">
+  <div id="categories" class="categories"></div>
+  <select id="sort" class="sort">
+    <option value="default">Sort: Default</option>
+    <option value="az">A–Z</option>
+    <option value="za">Z–A</option>
+    <option value="category">Category</option>
+    <option value="updated">Recently Updated</option>
+  </select>
+</div>
+
+<section id="recentSection" class="hidden">
+  <div class="section-head"><h3>Recently Played</h3><span>Stored on this computer</span></div>
+  <div id="recentGrid" class="recent-grid"></div>
+</section>
+
+<div class="section-head"><h3>Library</h3><span id="resultCount"></span></div>
+<section id="library" class="library"></section>
+<div id="empty" class="empty">No games matched that search or category.</div>
+<p class="note"><b>Website edition:</b> On GitHub Pages, Play and ↗ Open use normal web links instead of local computer files. Games you open are cached for offline use when possible. Watcher+ and other internet-based content still require an internet connection.</p>
+</main>
+
+<div id="viewer">
+  <div class="viewer-bar">
+    <button class="viewer-btn" onclick="closeApp()">← Library</button>
+    <div id="viewerTitle" class="viewer-title">Game</div>
+    <button id="viewerLog" class="viewer-btn" onclick="showViewerLog()">📝 Log</button>
+    <a id="viewerDownload" class="viewer-btn" href="#" download>⬇ Download</a>
+    <button class="viewer-btn primary" onclick="fullscreenGame()">⛶ Fullscreen</button>
+  </div>
+  <iframe id="frame" allow="autoplay; fullscreen; gamepad; clipboard-write"></iframe>
+</div>
+
+<div id="updatesModal" class="modal" onclick="modalBackdrop(event,'updatesModal')">
+<div class="modal-card">
+  <div class="modal-head">
+    <div><div class="eyebrow">What's New</div><h2>Library Update Log</h2></div>
+    <button class="top-btn" onclick="hideModal('updatesModal')">✕ Close</button>
+  </div>
+  <div class="update">
+    <div class="update-date">September 18, 2026 — Web Version 5.0</div>
+    <h3>GitHub Pages + Installable App</h3>
+    <ul>
+      <li>Converted the Game Library from a local-file launcher into a GitHub Pages-ready website.</li>
+      <li>Added installable PWA support for compatible browsers.</li>
+      <li>Added offline caching: local games are cached after they are opened.</li>
+      <li>Made all links repository-relative so the site works at username.github.io/repository-name/.</li>
+      <li>Added a custom offline page, custom 404 page, app icons, and website status indicator.</li>
+      <li>Kept Help, categories, search, favorites, recently played, per-game update logs, Play, Open, Download, and Fullscreen.</li>
+    </ul>
+  </div>
+  <div class="update">
+    <div class="update-date">September 18, 2026 — Version 4.0</div>
+    <h3>Three Big Game Updates</h3>
+    <ul>
+      <li>Replaced Watcher with the new Watcher+ version.</li>
+      <li>Replaced Cookie Corner Deluxe with Cookie Corner: Big Batch.</li>
+      <li>Replaced Neon Dash with the newest 15-level Neon Dash Studio.</li>
+      <li>Updated each game's individual Update Log with its new features.</li>
+      <li>Kept the v3.1 direct Open fallback for local-file browser problems.</li>
+    </ul>
+  </div>
+  <div class="update">
+    <div class="update-date">September 18, 2026 — Version 3.1</div>
+    <h3>Local File Launch Fix</h3>
+    <ul>
+      <li>Added an Open button that launches each game directly in a new browser tab.</li>
+      <li>Added a reminder to extract the ZIP before opening the launcher.</li>
+      <li>Kept the built-in Play view as the main option.</li>
+    </ul>
+  </div>
+  <div class="update">
+    <div class="update-date">August 24, 2026 — Version 3.0</div>
+    <h3>Help + Game Update Logs</h3>
+    <ul>
+      <li>Added a Help button that can open an email addressed to 7famsains@gmail.com.</li>
+      <li>Added an Update Log button to every game.</li>
+      <li>Added version numbers and last-updated dates to game cards.</li>
+      <li>Added an update-log button while a game is open.</li>
+      <li>Added a Recently Updated sort option.</li>
+    </ul>
+  </div>
+  <div class="update">
+    <div class="update-date">August 24, 2026 — Version 2.0</div>
+    <h3>Library Upgrade</h3>
+    <ul>
+      <li>Added Cookie Corner Deluxe.</li>
+      <li>Added categories, better search, Favorites, Recently Played, and sorting.</li>
+    </ul>
+  </div>
+  <div class="update">
+    <div class="update-date">August 24, 2026 — Version 1.0</div>
+    <h3>First Game Library</h3>
+    <ul>
+      <li>Created the original seven-game launcher with icons, Play, Fullscreen, and Download.</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<div id="helpModal" class="modal" onclick="modalBackdrop(event,'helpModal')">
+<div class="modal-card">
+  <div class="modal-head">
+    <div><div class="eyebrow">Need Help?</div><h2>Help & Feedback</h2></div>
+    <button class="top-btn" onclick="hideModal('helpModal')">✕ Close</button>
+  </div>
+  <div class="help-box">
+    <div class="help-option">
+      <h3>📧 Send an email</h3>
+      <p>Use this for a bug report, game idea, update request, or anything else about the Game Library.</p>
+      <a class="help-email" href="mailto:7famsains@gmail.com?subject=Game%20Library%20Help&body=Hi!%0A%0AGame:%20%0AWhat%20happened%20or%20what%20I%20want:%20%0A%0AThanks!">Email 7famsains@gmail.com</a>
+    </div>
+    <div class="help-option">
+      <h3>🛠 Game will not open?</h3>
+      <p>Refresh the website, make sure you are online for games that use internet resources, or use the ↗ Open button to launch the game directly in its own tab.</p>
+    </div>
+    <div class="help-option">
+      <h3>📲 Install the library</h3>
+      <p>On compatible browsers, an <b>Install App</b> button appears at the top. Installing creates an app-style shortcut while still using the same GitHub Pages website.</p>
+    </div>
+    <div class="help-option">
+      <h3>🐛 Bug report tip</h3>
+      <p>Include the game name, what you clicked, what you expected to happen, and what actually happened.</p>
+    </div>
+    <div class="help-option">
+      <h3>💡 Update idea tip</h3>
+      <p>Say which game you want changed and describe the new feature. The game's Update Log can be updated when a new version is added to this hub.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="gameLogModal" class="modal" onclick="modalBackdrop(event,'gameLogModal')">
+<div class="modal-card">
+  <div class="modal-head">
+    <div><div class="eyebrow">Game History</div><h2 id="gameLogTitle">Update Log</h2></div>
+    <button class="top-btn" onclick="hideModal('gameLogModal')">✕ Close</button>
+  </div>
+  <div id="gameLogBody"></div>
+</div>
+</div>
+
+<script>
+const apps = [{"title": "2046", "file": "2046.html", "icon": "🔢", "category": "Puzzle", "desc": "Swipe and combine matching number tiles.", "tags": ["numbers", "swipe", "puzzle"], "version": "2.0", "updated": "August 24, 2026", "log": ["Added to the Game Library.", "Swipe controls, keyboard controls, score tracking, restart, and game-over screen included."]}, {"title": "Block Stack 3D", "file": "block-stack-3d.html", "icon": "🧱", "category": "Arcade", "desc": "Stack moving blocks and chase a perfect streak.", "tags": ["stack", "3d", "arcade"], "version": "2.0", "updated": "August 24, 2026", "log": ["Added to the Game Library.", "Includes Easy, Normal, and Hard difficulties, records, perfect streaks, and score tracking."]}, {"title": "Code Place", "file": "code-place.html", "icon": "💻", "category": "Creative", "desc": "Build, code, experiment, and make new creations.", "tags": ["coding", "creator", "blocks"], "version": "2.0", "updated": "August 24, 2026", "log": ["Added to the Game Library.", "Includes code editing, previews, templates, creations, and blocks-style coding tools."]}, {"title": "Neon Dash Studio", "file": "neon-dash.html", "icon": "⚡", "category": "Arcade", "desc": "15-level neon rhythm platformer with game modes, customization, triggers, editor tools, and Endless mode.", "tags": ["dash", "music", "platformer", "15 levels", "editor", "triggers", "endless", "switcher", "spider", "coins", "icons"], "version": "3.0", "updated": "September 18, 2026", "new": true, "log": ["Expanded to 15 levels with a Geometry Dash-style home screen.", "Added and refined Cube, Rocket, Ball, UFO, Wave, Robot, Spider, and Switcher gameplay modes.", "Switcher now teleports to the nearest valid surface or through a block, with corrected falling behavior when no surface supports the player.", "Added Endless mode with continuously generated gameplay and increasing speed.", "Expanded the editor with settings, manual coin placement, editable triggers, custom-level saving, editing, and testing.", "Added trigger actions including speed changes, gravity, pulse, shake, color, Disco, Message, and Mode Change.", "Added separate icons, primary/secondary colors, and trails for the different game modes.", "Improved mode-introduction progression and harder, more open level design.", "Fixed the Home button so it reliably returns to the main home screen."]}, {"title": "Sky Flapper", "file": "sky-flapper.html", "icon": "🐦", "category": "Arcade", "desc": "Fly through gaps on Easy, Normal, or Hard.", "tags": ["flappy", "bird", "high score"], "version": "2.0", "updated": "August 24, 2026", "log": ["Added to the Game Library.", "Includes Easy, Normal, and Hard modes, settings, high scores, and music controls."]}, {"title": "Watcher+", "file": "watcher.html", "icon": "🎬", "category": "Media", "desc": "Shows, gaming videos, saved items, search, importing, episode controls, and blocking.", "tags": ["movies", "shows", "watch", "games", "saved", "youtube", "import", "block episodes", "playlists"], "version": "3.0", "updated": "September 18, 2026", "new": true, "log": ["Rebuilt as Watcher+ with separate Shows, Games, and Saved sections.", "Added Gravity Falls, Big City Greens, Amphibia, and Phineas and Ferb, plus a Geometry Dash gaming video.", "Added search across the Watcher library.", "Added importing for YouTube videos and playlists into Shows or Games.", "Removed seasons from playlist-style shows and uses the playlist controls instead.", "Added saving for shows and individual episodes.", "Added block/unblock controls for individual episodes; blocked episodes will not play.", "Previous and Next automatically skip blocked episodes.", "Added thumbnails and YouTube fallback links when embedded playback is unavailable.", "Added the Watcher W logo and cleaned-up library layout."]}, {"title": "3D Hoops", "file": "3d-hoops.html", "icon": "🏀", "category": "Sports", "desc": "Move around the court and take 3D basketball shots.", "tags": ["basketball", "3d", "sports"], "version": "2.0", "updated": "August 24, 2026", "log": ["Added to the Game Library.", "Includes 3D movement, shooting, difficulty modes, settings, mobile controls, and score tracking."]}, {"title": "Cookie Corner: Big Batch", "file": "cookie-corner-deluxe.html", "icon": "🍪", "category": "Clicker", "desc": "A bigger cookie clicker with random events, difficulty modes, backgrounds, upgrades, unlocks, and backup saves.", "tags": ["cookie", "clicker", "upgrades", "events", "backgrounds", "difficulty", "skins", "backup", "autosave"], "version": "2.0", "updated": "September 18, 2026", "new": true, "log": ["Upgraded Cookie Corner Deluxe into Cookie Corner: Big Batch.", "Added random good and bad events including Cookie Frenzy, Oven Overdrive, Sugar Rush, upgrade sales, Grandma gifts, Cookie Meteors, Golden Cookie Rushes, power outages, burnt batches, and cookie thieves.", "Expanded to 14 upgrade types.", "Expanded to 15 unlockable cookies with larger cookie bonuses.", "Added 10 unlockable backgrounds including Kitchen, Bakery, Picnic, Night, Candy, Mint, Space, Gold, Rainbow, and Neon themes.", "Added Easy, Normal, and Hard difficulty modes.", "Improved autosaving and added backup/import tools, including Backup Save and Load Backup.", "Kept achievements, music, Golden Cookies, upgrades, and saved progress."]}];
+const categoryList = ["All", "Arcade", "Puzzle", "Creative", "Sports", "Clicker", "Media", "Favorites"];
+const library=document.getElementById('library'),categoriesEl=document.getElementById('categories'),
+search=document.getElementById('search'),sort=document.getElementById('sort'),empty=document.getElementById('empty'),
+resultCount=document.getElementById('resultCount'),favCount=document.getElementById('favCount'),
+frame=document.getElementById('frame'),viewer=document.getElementById('viewer'),viewerTitle=document.getElementById('viewerTitle'),
+viewerDownload=document.getElementById('viewerDownload'),recentSection=document.getElementById('recentSection'),
+recentGrid=document.getElementById('recentGrid');
+
+let activeCategory='All';
+let currentGameTitle='';
+let favorites=JSON.parse(localStorage.getItem('gameLibraryFavorites')||'[]');
+let recents=JSON.parse(localStorage.getItem('gameLibraryRecents')||'[]');
+const titleMigrations={"Watcher":"Watcher+","Cookie Corner Deluxe":"Cookie Corner: Big Batch"};
+favorites=[...new Set(favorites.map(x=>titleMigrations[x]||x))];
+recents=[...new Set(recents.map(x=>titleMigrations[x]||x))];
+localStorage.setItem('gameLibraryFavorites',JSON.stringify(favorites));
+localStorage.setItem('gameLibraryRecents',JSON.stringify(recents));
+
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function isFav(t){return favorites.includes(t)}
+function saveFavs(){localStorage.setItem('gameLibraryFavorites',JSON.stringify(favorites))}
+function saveRecents(){localStorage.setItem('gameLibraryRecents',JSON.stringify(recents))}
+function drawCategories(){categoriesEl.innerHTML=categoryList.map(c=>`<button class="chip ${activeCategory===c?'active':''}" onclick='setCategory(${JSON.stringify(c)})'>${esc(c)}</button>`).join('')}
+function setCategory(c){activeCategory=c;drawCategories();render()}
+function toggleFav(t){favorites=isFav(t)?favorites.filter(x=>x!==t):[t,...favorites];saveFavs();render()}
+
+function filteredApps(){
+  const q=search.value.trim().toLowerCase();
+  let list=apps.filter(a=>{
+    const ok=activeCategory==='All'||(activeCategory==='Favorites'?isFav(a.title):a.category===activeCategory);
+    const hay=[a.title,a.category,a.desc,a.version,a.updated,...a.tags,...a.log].join(' ').toLowerCase();
+    return ok&&(!q||hay.includes(q));
+  });
+  if(sort.value==='az')list.sort((a,b)=>a.title.localeCompare(b.title));
+  if(sort.value==='za')list.sort((a,b)=>b.title.localeCompare(a.title));
+  if(sort.value==='category')list.sort((a,b)=>a.category.localeCompare(b.category)||a.title.localeCompare(b.title));
+  if(sort.value==='updated')list.sort((a,b)=>apps.indexOf(b)-apps.indexOf(a));
+  return list;
+}
+
+function render(){
+  const list=filteredApps();
+  library.innerHTML=list.map(a=>`
+  <article class="app-card">
+    <div class="app-icon">${a.icon}</div>
+    <div class="app-info">
+      <div class="app-top">
+        <span class="category">${esc(a.category)}</span>
+        <span class="version">v${esc(a.version)}</span>
+        ${a.new?'<span class="new-badge">NEW</span>':''}
+      </div>
+      <h2>${esc(a.title)}</h2>
+      <div class="app-desc">${esc(a.desc)}</div>
+      <div class="updated">Updated ${esc(a.updated)}</div>
+      <div class="actions">
+        <button class="play-btn" onclick='openApp(${JSON.stringify(a.title)},${JSON.stringify(a.file)})'>▶ Play</button>
+        <a class="download-btn" href="${esc(a.file)}" target="_blank" rel="noopener">↗ Open</a>
+        <button class="log-btn" onclick='showGameLog(${JSON.stringify(a.title)})'>📝 Update Log</button>
+        <a class="download-btn" href="${esc(a.file)}" download>⬇ Download</a>
+        <button class="fav-btn ${isFav(a.title)?'active':''}" onclick='toggleFav(${JSON.stringify(a.title)})'>${isFav(a.title)?'★':'☆'}</button>
+      </div>
+    </div>
+  </article>`).join('');
+  empty.style.display=list.length?'none':'block';
+  resultCount.textContent=`${list.length} shown`;
+  favCount.textContent=favorites.length;
+  renderRecents();
+}
+
+function openApp(title,file){
+  currentGameTitle=title;
+  viewerTitle.textContent=title;
+  viewerDownload.href=file;
+  viewerDownload.setAttribute('download',file);
+  frame.src=file;
+  viewer.classList.add('show');
+  document.body.style.overflow='hidden';
+  recents=[title,...recents.filter(x=>x!==title)].slice(0,6);
+  saveRecents();renderRecents();
+}
+function closeApp(){viewer.classList.remove('show');frame.src='about:blank';document.body.style.overflow=''}
+function fullscreenGame(){if(frame.requestFullscreen)frame.requestFullscreen();else if(frame.webkitRequestFullscreen)frame.webkitRequestFullscreen()}
+function showViewerLog(){if(currentGameTitle)showGameLog(currentGameTitle)}
+
+function renderRecents(){
+  const found=recents.map(t=>apps.find(a=>a.title===t)).filter(Boolean);
+  recentSection.classList.toggle('hidden',!found.length);
+  recentGrid.innerHTML=found.map(a=>`<div class="recent-item" onclick='openApp(${JSON.stringify(a.title)},${JSON.stringify(a.file)})'><div class="recent-icon">${a.icon}</div><div><div class="recent-title">${esc(a.title)}</div><div class="recent-cat">${esc(a.category)} • v${esc(a.version)}</div></div></div>`).join('');
+}
+
+function showGameLog(title){
+  const a=apps.find(x=>x.title===title); if(!a)return;
+  document.getElementById('gameLogTitle').textContent=a.icon+' '+a.title;
+  document.getElementById('gameLogBody').innerHTML=`
+    <div class="game-log-meta">
+      <span class="meta-pill">Version ${esc(a.version)}</span>
+      <span class="meta-pill">Updated ${esc(a.updated)}</span>
+      <span class="meta-pill">${esc(a.category)}</span>
+    </div>
+    <div class="update">
+      <div class="update-date">${esc(a.updated)} — Version ${esc(a.version)}</div>
+      <h3>What's in this version</h3>
+      <ul>${a.log.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    </div>`;
+  document.getElementById('gameLogModal').classList.add('show');
+}
+
+function showUpdates(){document.getElementById('updatesModal').classList.add('show')}
+function showHelp(){document.getElementById('helpModal').classList.add('show')}
+function hideModal(id){document.getElementById(id).classList.remove('show')}
+function modalBackdrop(e,id){if(e.target.id===id)hideModal(id)}
+
+search.addEventListener('input',render);sort.addEventListener('change',render);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(document.getElementById('gameLogModal').classList.contains('show'))hideModal('gameLogModal');
+    else if(document.getElementById('helpModal').classList.contains('show'))hideModal('helpModal');
+    else if(document.getElementById('updatesModal').classList.contains('show'))hideModal('updatesModal');
+    else if(viewer.classList.contains('show'))closeApp();
+  }
+});
+drawCategories();render();
+
+// GitHub Pages / PWA support
+const installBtn=document.getElementById('installBtn');
+const webStatus=document.getElementById('webStatus');
+let deferredInstallPrompt=null;
+
+function updateWebStatus(){
+  const online=navigator.onLine;
+  webStatus.classList.toggle('offline',!online);
+  webStatus.querySelector('span').textContent=online?'Online':'Offline';
+}
+updateWebStatus();
+window.addEventListener('online',updateWebStatus);
+window.addEventListener('offline',updateWebStatus);
+
+window.addEventListener('beforeinstallprompt',event=>{
+  event.preventDefault();
+  deferredInstallPrompt=event;
+  installBtn.classList.add('show');
+});
+
+installBtn.addEventListener('click',async()=>{
+  if(!deferredInstallPrompt)return;
+  deferredInstallPrompt.prompt();
+  try{await deferredInstallPrompt.userChoice}catch(e){}
+  deferredInstallPrompt=null;
+  installBtn.classList.remove('show');
+});
+
+window.addEventListener('appinstalled',()=>{
+  deferredInstallPrompt=null;
+  installBtn.classList.remove('show');
+});
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

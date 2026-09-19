@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="app-version" content="2046-2026.08.24.2">
+
+<title>2046</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f1eb;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #403b36;
+}
+
+.game {
+    width: 430px;
+    max-width: 92vw;
+}
+
+.header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+h1 {
+    font-size: 60px;
+    line-height: 1;
+    letter-spacing: -4px;
+}
+
+.header-right {
+    display: flex;
+    gap: 8px;
+}
+
+.score {
+    min-width: 85px;
+    padding: 8px 15px;
+    background: #8b8177;
+    color: white;
+    border-radius: 7px;
+    text-align: center;
+}
+
+.score-label {
+    font-size: 10px;
+    font-weight: bold;
+    opacity: 0.8;
+}
+
+#scoreValue {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+button {
+    min-height: 48px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 7px;
+    background: #655b52;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+}
+
+button:hover {
+    background: #50483f;
+}
+
+.info {
+    margin-bottom: 15px;
+    color: #6b645e;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.board-wrap {
+    position: relative;
+}
+
+#board {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 10px;
+    background: #aaa096;
+    border-radius: 10px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#board:active {
+    cursor: grabbing;
+}
+
+.cell {
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: rgba(238, 228, 218, 0.35);
+    font-size: 32px;
+    font-weight: 700;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+}
+
+.n2 { background: #eee4da; color: #625d55; }
+.n4 { background: #ede0c8; color: #625d55; }
+.n8 { background: #f2b179; color: white; }
+.n16 { background: #f59563; color: white; }
+.n32 { background: #f67c5f; color: white; }
+.n64 { background: #f65e3b; color: white; }
+
+.n128,
+.n256,
+.n512 {
+    color: white;
+    font-size: 27px;
+}
+
+.n128 { background: #edcf72; }
+.n256 { background: #edcc61; }
+.n512 { background: #edc850; }
+
+.n1024,
+.n2048 {
+    color: white;
+    font-size: 22px;
+}
+
+.n1024 { background: #edc53f; }
+.n2048 { background: #edc22e; }
+
+.big {
+    background: #3f3934;
+    color: white;
+    font-size: 19px;
+}
+
+.instructions {
+    margin-top: 14px;
+    text-align: center;
+    color: #827a72;
+    font-size: 13px;
+}
+
+/* Loss screen appears directly over the board. */
+#gameOver {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 25px;
+    border-radius: 10px;
+    background: rgba(244, 241, 235, 0.92);
+    text-align: center;
+    z-index: 10;
+}
+
+#gameOver.show {
+    display: flex;
+}
+
+.game-over-card h2 {
+    font-size: 38px;
+    margin-bottom: 8px;
+}
+
+.game-over-card p {
+    margin-bottom: 15px;
+    color: #6b645e;
+}
+
+.game-over-card button {
+    min-width: 120px;
+}
+
+/* Shown for a moment if the page notices a newer website version. */
+#updateMessage {
+    display: none;
+    margin-top: 12px;
+    text-align: center;
+    color: #6b645e;
+    font-size: 13px;
+}
+
+#updateMessage.show {
+    display: block;
+}
+
+@media (max-width: 500px) {
+    h1 {
+        font-size: 48px;
+    }
+
+    .cell {
+        font-size: 26px;
+    }
+
+    .n128,
+    .n256,
+    .n512 {
+        font-size: 23px;
+    }
+
+    .n1024,
+    .n2048 {
+        font-size: 18px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+    <div class="header">
+        <h1>2046</h1>
+
+        <div class="header-right">
+            <div class="score">
+                <div class="score-label">SCORE</div>
+                <div id="scoreValue">0</div>
+            </div>
+
+            <button id="restartButton" type="button">Restart</button>
+        </div>
+    </div>
+
+    <div class="info">
+        Swipe the board to move the numbers. Match the same numbers to combine them.
+    </div>
+
+    <div class="board-wrap">
+        <div id="board"></div>
+
+        <div id="gameOver">
+            <div class="game-over-card">
+                <h2>You Lose</h2>
+                <p>No moves are left.</p>
+                <button id="playAgainButton" type="button">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        Swipe • Arrow Keys • WASD
+    </div>
+
+    <div id="updateMessage">A newer version was found. Updating…</div>
+
+</div>
+
+<script>
+const APP_VERSION = "2046-2026.08.24.2";
+const SIZE = 4;
+
+let board = [];
+let score = 0;
+let gameEnded = false;
+
+function restartGame() {
+    score = 0;
+    gameEnded = false;
+    board = [];
+
+    for (let row = 0; row < SIZE; row++) {
+        board[row] = [];
+
+        for (let col = 0; col < SIZE; col++) {
+            board[row][col] = 0;
+        }
+    }
+
+    addRandomTile();
+    addRandomTile();
+
+    document.getElementById("gameOver").classList.remove("show");
+    drawBoard();
+}
+
+function addRandomTile() {
+    const empty = [];
+
+    for (let row = 0; row < SIZE; row++) {
+        for (let col = 0; col < SIZE; col++) {
+            if (board[row][col] === 0) {
+                empty.push({ row, col });
+            }
+        }
+    }
+
+    if (empty.length === 0) {
+        return;
+    }
+
+    const spot = empty[Math.floor(Math.random() * empty.length)];
+    board[spot.row][spot.col] = Math.random() < 0.9 ? 2 : 4;
+}
+
+function drawBoard() {
+    const boardElement = document.getElementById("board");
+    boardElement.innerHTML = "";
+
+    for (let row = 0; row < SIZE; row++) {
+        for (let col = 0; col < SIZE; col++) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+
+            const value = board[row][col];
+
+            if (value !== 0) {
+                cell.textContent = value;
+
+                if (value <= 2048) {
+                    cell.classList.add("n" + value);
+                } else {
+                    cell.classList.add("big");
+                }
+            }
+
+            boardElement.appendChild(cell);
+        }
+    }
+
+    document.getElementById("scoreValue").textContent = score;
+}
+
+function combineLine(line) {
+    const numbers = line.filter(number => number !== 0);
+
+    for (let i = 0; i < numbers.length - 1; i++) {
+        if (numbers[i] === numbers[i + 1]) {
+            numbers[i] *= 2;
+            score += numbers[i];
+            numbers.splice(i + 1, 1);
+        }
+    }
+
+    while (numbers.length < SIZE) {
+        numbers.push(0);
+    }
+
+    return numbers;
+}
+
+function moveLeft() {
+    if (gameEnded) return;
+
+    const before = JSON.stringify(board);
+
+    for (let row = 0; row < SIZE; row++) {
+        board[row] = combineLine(board[row]);
+    }
+
+    finishMove(before);
+}
+
+function moveRight() {
+    if (gameEnded) return;
+
+    const before = JSON.stringify(board);
+
+    for (let row = 0; row < SIZE; row++) {
+        let line = [...board[row]].reverse();
+        line = combineLine(line);
+        board[row] = line.reverse();
+    }
+
+    finishMove(before);
+}
+
+function moveUp() {
+    if (gameEnded) return;
+
+    const before = JSON.stringify(board);
+
+    for (let col = 0; col < SIZE; col++) {
+        let line = [];
+
+        for (let row = 0; row < SIZE; row++) {
+            line.push(board[row][col]);
+        }
+
+        line = combineLine(line);
+
+        for (let row = 0; row < SIZE; row++) {
+            board[row][col] = line[row];
+        }
+    }
+
+    finishMove(before);
+}
+
+function moveDown() {
+    if (gameEnded) return;
+
+    const before = JSON.stringify(board);
+
+    for (let col = 0; col < SIZE; col++) {
+        let line = [];
+
+        for (let row = 0; row < SIZE; row++) {
+            line.push(board[row][col]);
+        }
+
+        line.reverse();
+        line = combineLine(line);
+        line.reverse();
+
+        for (let row = 0; row < SIZE; row++) {
+            board[row][col] = line[row];
+        }
+    }
+
+    finishMove(before);
+}
+
+function finishMove(before) {
+    const after = JSON.stringify(board);
+
+    if (before !== after) {
+        addRandomTile();
+        drawBoard();
+    }
+
+    /*
+        Always check after a swipe, even if nothing moved.
+        This makes the loss condition reliable.
+    */
+    checkGameOver();
+}
+
+function hasAnyMovesLeft() {
+    for (let row = 0; row < SIZE; row++) {
+        for (let col = 0; col < SIZE; col++) {
+            if (board[row][col] === 0) {
+                return true;
+            }
+
+            if (
+                col < SIZE - 1 &&
+                board[row][col] === board[row][col + 1]
+            ) {
+                return true;
+            }
+
+            if (
+                row < SIZE - 1 &&
+                board[row][col] === board[row + 1][col]
+            ) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function checkGameOver() {
+    if (hasAnyMovesLeft()) {
+        return false;
+    }
+
+    gameEnded = true;
+    document.getElementById("gameOver").classList.add("show");
+    return true;
+}
+
+/* SWIPE CONTROLS */
+
+const boardElement = document.getElementById("board");
+
+let startX = 0;
+let startY = 0;
+let swiping = false;
+
+boardElement.addEventListener("pointerdown", function(event) {
+    if (gameEnded) return;
+
+    event.preventDefault();
+
+    swiping = true;
+    startX = event.clientX;
+    startY = event.clientY;
+
+    boardElement.setPointerCapture(event.pointerId);
+});
+
+boardElement.addEventListener("dragstart", function(event) {
+    event.preventDefault();
+});
+
+boardElement.addEventListener("pointerup", function(event) {
+    event.preventDefault();
+
+    if (!swiping || gameEnded) {
+        return;
+    }
+
+    swiping = false;
+
+    const differenceX = event.clientX - startX;
+    const differenceY = event.clientY - startY;
+    const minimumSwipe = 35;
+
+    if (
+        Math.abs(differenceX) < minimumSwipe &&
+        Math.abs(differenceY) < minimumSwipe
+    ) {
+        return;
+    }
+
+    if (Math.abs(differenceX) > Math.abs(differenceY)) {
+        differenceX > 0 ? moveRight() : moveLeft();
+    } else {
+        differenceY > 0 ? moveDown() : moveUp();
+    }
+});
+
+boardElement.addEventListener("pointercancel", function() {
+    swiping = false;
+});
+
+/* KEYBOARD CONTROLS */
+
+document.addEventListener("keydown", function(event) {
+    if (gameEnded) return;
+
+    const key = event.key.toLowerCase();
+
+    if (key === "arrowleft" || key === "a") {
+        event.preventDefault();
+        moveLeft();
+    } else if (key === "arrowright" || key === "d") {
+        event.preventDefault();
+        moveRight();
+    } else if (key === "arrowup" || key === "w") {
+        event.preventDefault();
+        moveUp();
+    } else if (key === "arrowdown" || key === "s") {
+        event.preventDefault();
+        moveDown();
+    }
+});
+
+document.getElementById("restartButton").addEventListener("click", restartGame);
+document.getElementById("playAgainButton").addEventListener("click", restartGame);
+
+/*
+    WEBSITE UPDATE CHECKER
+
+    This only works after the file is hosted on a normal http/https website.
+    It checks the server with a cache-busting URL. If the server has a newer
+    app-version meta tag, the old page replaces itself with the newest page.
+
+    This means versions that include this checker will stop staying stuck on
+    old cached copies after future updates.
+*/
+async function checkForWebsiteUpdate() {
+    if (location.protocol !== "http:" && location.protocol !== "https:") {
+        return;
+    }
+
+    try {
+        const checkUrl = new URL(location.href);
+
+        checkUrl.searchParams.set("_updatecheck", Date.now().toString());
+
+        const response = await fetch(checkUrl.toString(), {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            return;
+        }
+
+        const newestHtml = await response.text();
+
+        const versionMatch = newestHtml.match(
+            /<meta\s+name=["']app-version["']\s+content=["']([^"']+)["']/i
+        );
+
+        if (!versionMatch) {
+            return;
+        }
+
+        const newestVersion = versionMatch[1];
+
+        if (newestVersion !== APP_VERSION) {
+            const message = document.getElementById("updateMessage");
+            message.classList.add("show");
+
+            const freshUrl = new URL(location.href);
+
+            freshUrl.searchParams.delete("_updatecheck");
+            freshUrl.searchParams.set("v", newestVersion);
+            freshUrl.searchParams.set("_fresh", Date.now().toString());
+
+            location.replace(freshUrl.toString());
+        }
+    } catch (error) {
+        /*
+            If the update check fails, the game still works normally.
+        */
+    }
+}
+
+window.addEventListener("pageshow", function(event) {
+    if (event.persisted) {
+        checkForWebsiteUpdate();
+    }
+});
+
+document.addEventListener("visibilitychange", function() {
+    if (!document.hidden) {
+        checkForWebsiteUpdate();
+    }
+});
+
+restartGame();
+checkForWebsiteUpdate();
+
+</script>
+</body>
+</html>

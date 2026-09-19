@@ -1,0 +1,641 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Watcher+</title>
+<style>
+:root{
+  --bg:#090b0f;--panel:#14181e;--panel2:#1c222a;--line:#2b3540;
+  --text:#f7f8fa;--muted:#9ba6b2;--accent:#f3c24f;--game:#69d6ff;
+  --danger:#ff7373;--blocked:#6f7781;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+a{text-decoration:none;color:inherit}
+.app{max-width:1450px;margin:auto;padding:0 16px 40px}
+
+header{
+  min-height:68px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:30;background:#090b0ff2;
+  border-bottom:1px solid #ffffff12;backdrop-filter:blur(14px)
+}
+.brand{font-size:22px;font-weight:900;margin-right:auto;display:flex;align-items:center;gap:10px}.brandLogo{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,var(--accent),#d9a62e);color:#17120a;font-weight:1000;box-shadow:0 7px 20px rgba(243,194,79,.18)}
+.tabs{display:flex;gap:7px;flex-wrap:wrap}
+.tab,.btn{
+  border:1px solid var(--line);background:var(--panel2);color:#fff;
+  border-radius:10px;padding:9px 12px;font-weight:800
+}
+.tab{border-radius:999px}
+.tab.on{background:var(--accent);color:#111;border-color:transparent}
+.tab.game.on{background:var(--game);color:#06131a}
+.search{
+  min-width:260px;background:var(--panel);border:1px solid var(--line);
+  color:#fff;border-radius:999px;padding:10px 13px;outline:none
+}
+.import{background:#fff;color:#111;border:0}
+
+h1{margin:26px 0 14px}
+.sectionNote{color:var(--muted);font-size:13px;margin:-7px 0 16px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:15px;
+  overflow:hidden;position:relative;transition:.15s transform,.15s border-color
+}
+.card:hover{transform:translateY(-2px);border-color:#465362}
+.card.game{border-color:#245369}
+.cover{
+  aspect-ratio:16/9;background:#1b232d center/cover;
+  display:flex;align-items:flex-end;padding:10px
+}
+.badge{
+  background:#000b;padding:5px 8px;border-radius:999px;
+  font-size:11px;font-weight:900
+}
+.game .badge{background:var(--game);color:#071117}
+.body{padding:12px}
+.title{font-weight:900;line-height:1.25}
+.meta,.desc{font-size:12px;color:var(--muted);margin-top:5px}
+.star{
+  position:absolute;right:8px;top:8px;width:34px;height:34px;
+  border:0;border-radius:50%;background:#000b;color:#fff;z-index:2
+}
+.star.on{background:var(--accent);color:#111}
+.hidden{display:none!important}
+.empty{
+  grid-column:1/-1;padding:40px;text-align:center;color:var(--muted);
+  border:1px dashed var(--line);border-radius:14px
+}
+
+.savedLabel{
+  grid-column:1/-1;margin-top:4px;font-size:13px;font-weight:900;
+  letter-spacing:.08em;color:var(--muted)
+}
+.episodeCard .cover{aspect-ratio:16/7}
+.episodeCard.blocked{opacity:.55}
+.blockBadge{background:var(--danger);color:#fff}
+
+.viewer{
+  display:grid;grid-template-columns:minmax(0,1.7fr) minmax(340px,.75fr);
+  gap:18px;margin-top:18px
+}
+.panel{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:16px;overflow:hidden
+}
+.video{aspect-ratio:16/9;background:#000}
+.video iframe{width:100%;height:100%;border:0;display:block}
+.blockedScreen{
+  width:100%;height:100%;display:grid;place-items:center;text-align:center;
+  padding:30px;background:linear-gradient(135deg,#171b20,#0d1014)
+}
+.blockedScreen strong{font-size:24px}
+.blockedScreen span{display:block;color:var(--muted);margin-top:8px}
+.info{padding:17px}
+.kicker{font-size:12px;font-weight:900;color:var(--accent);letter-spacing:.08em}
+.gameMode .kicker{color:var(--game)}
+.info h2{margin:6px 0}
+.info p{color:#c5ccd3}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.fallback{
+  display:flex;justify-content:space-between;gap:10px;align-items:center;
+  padding:10px 12px;color:var(--muted);font-size:13px;
+  border-top:1px solid #222b34
+}
+.yt{
+  background:#fff;color:#111;padding:8px 10px;border-radius:8px;font-weight:900
+}
+.side{
+  position:sticky;top:86px;max-height:calc(100vh - 106px);
+  display:flex;flex-direction:column
+}
+.sideHead{
+  padding:13px;border-bottom:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:center
+}
+.sideHead h3{margin:0}
+.list{overflow:auto;padding:7px}
+.ep{
+  width:100%;border:0;background:transparent;color:#fff;text-align:left;
+  padding:8px;border-radius:10px;display:grid;
+  grid-template-columns:86px minmax(0,1fr) auto;gap:10px;align-items:center
+}
+.ep:hover,.ep.on{background:#222a33}
+.ep.blocked{opacity:.5}
+.ep.blocked:hover{background:#1a1f25}
+.epThumb{
+  width:86px;aspect-ratio:16/9;border-radius:8px;
+  background:#1b232d center/cover
+}
+.epText{min-width:0}
+.epTitle{font-size:13px;font-weight:900;line-height:1.25}
+.ep small{display:block;color:var(--muted);margin-top:3px}
+.epBtns{display:flex;gap:5px}
+.mini{
+  border:1px solid var(--line);background:#171c22;color:#fff;
+  border-radius:8px;padding:6px 8px;font-size:11px;font-weight:800
+}
+.mini.saved{background:var(--accent);color:#111;border-color:transparent}
+.mini.blocked{background:var(--danger);color:#fff;border-color:transparent}
+.playlistInfo{padding:16px;color:var(--muted);line-height:1.5}
+
+.modalW{
+  position:fixed;inset:0;background:#000b;display:grid;place-items:center;
+  z-index:50;padding:18px
+}
+.modal{
+  width:min(580px,100%);background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;padding:20px
+}
+.modal h2{margin-top:0}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+.field{
+  width:100%;background:#0d1116;border:1px solid var(--line);
+  color:#fff;border-radius:9px;padding:10px
+}
+.hint{color:var(--muted);font-size:12px}
+.err{color:#ff9090;font-size:12px;margin-top:8px}
+
+@media(max-width:1020px){
+  .grid{grid-template-columns:repeat(3,1fr)}
+  .viewer{grid-template-columns:1fr}
+  .side{position:static;max-height:none}.list{max-height:560px}
+}
+@media(max-width:720px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .search{order:4;width:100%}
+}
+@media(max-width:560px){
+  .grid{grid-template-columns:1fr}
+  .fields{grid-template-columns:1fr}.full{grid-column:auto}
+  .ep{grid-template-columns:72px minmax(0,1fr)}
+  .epThumb{width:72px}
+  .epBtns{grid-column:2;justify-content:flex-start}
+  .fallback{align-items:flex-start;flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand"><div class="brandLogo">W</div><span>WATCHER+</span></div>
+  <div class="tabs">
+    <button class="tab on" data-tab="shows">Shows</button>
+    <button class="tab game" data-tab="games">Games</button>
+    <button class="tab" data-tab="saved">Saved</button>
+  </div>
+  <input id="search" class="search" placeholder="Search Watcher...">
+  <button id="importBtn" class="btn import">＋ Import</button>
+</header>
+
+<main id="browse">
+  <h1 id="pageTitle">Shows</h1>
+  <div id="pageNote" class="sectionNote">Pick something to watch.</div>
+  <div id="grid" class="grid"></div>
+</main>
+
+<section id="watch" class="hidden">
+  <button id="backBtn" class="btn" style="margin-top:18px">← Back</button>
+  <div id="viewer" class="viewer">
+    <div class="panel">
+      <div id="video" class="video"></div>
+      <div id="fallback" class="fallback">
+        <span>If it won't play here, use the YouTube link.</span>
+        <a id="youtubeLink" class="yt" target="_blank" rel="noopener">YouTube ↗</a>
+      </div>
+      <div class="info">
+        <div id="kicker" class="kicker"></div>
+        <h2 id="viewerTitle"></h2>
+        <p id="viewerDesc"></p>
+        <div class="row">
+          <button id="prevBtn" class="btn">← Previous</button>
+          <button id="restartBtn" class="btn">↻ Restart</button>
+          <button id="nextBtn" class="btn">Next →</button>
+          <button id="saveShowBtn" class="btn">☆ Save Show</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="panel side">
+      <div class="sideHead"><h3 id="sideTitle">Episodes</h3></div>
+      <div id="episodeList" class="list"></div>
+    </aside>
+  </div>
+</section>
+</div>
+
+<div id="modal" class="modalW hidden">
+  <div class="modal">
+    <h2>Import to Watcher</h2>
+    <p class="hint">Paste a YouTube video or playlist. Choose whether it belongs in Shows or Games. Imported items are automatically saved.</p>
+    <div class="fields">
+      <input id="importUrl" class="field full" placeholder="YouTube link">
+      <input id="importTitle" class="field" placeholder="Title">
+      <select id="importType" class="field">
+        <option value="show">Show</option>
+        <option value="game">Game video</option>
+      </select>
+      <input id="importDesc" class="field full" placeholder="Description (optional)">
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:14px">
+      <button id="cancelImport" class="btn">Cancel</button>
+      <button id="addImport" class="btn">Add</button>
+    </div>
+    <div id="importError" class="err"></div>
+  </div>
+</div>
+
+<script>
+const makeEpisodes = rows => rows.map(x => ({title:x[0],start:x[1],stamp:x[2]}));
+
+const builtIns = [
+  {
+    id:"gravity",title:"Gravity Falls",kind:"show",video:"PNWu3Gct3Ps",
+    desc:"Gravity Falls episodes",
+    episodes:makeEpisodes([
+      ["Tourist Trapped",0,"00:00"],["The Legend of the Gobblewonker",1262,"21:02"],["Headhunters",2554,"42:34"],
+      ["The Hand That Rocks the Mabel",3868,"1:04:28"],["The Inconveniencing",5206,"1:26:46"],["Dipper vs. Manliness",6432,"1:47:12"],
+      ["Double Dipper",7785,"2:09:45"],["Irrational Treasure",9138,"2:32:18"],["The Time Traveler's Pig",10431,"2:53:51"],
+      ["Fight Fighters",11783,"3:16:23"],["Little Dipper",13136,"3:38:56"],["Summerween",14459,"4:00:59"],
+      ["Boss Mabel",15811,"4:23:31"],["Bottomless Pit!",17105,"4:45:05"],["The Deep End",18458,"5:07:38"],
+      ["Carpet Diem",19749,"5:29:09"],["Boyz Crazy",21043,"5:50:43"],["Land Before Swine",22336,"6:12:16"],
+      ["Dreamscaperers",23674,"6:34:34"],["Gideon Rises",25071,"6:57:51"]
+    ])
+  },
+  {
+    id:"greens",title:"Big City Greens",kind:"show",video:"EhPzVV3JU3s",
+    playlist:"PLWz9TbuTddMDIGPbWyP5jG2XAa5brRmCZ",
+    desc:"Big City Greens YouTube playlist"
+  },
+  {
+    id:"amphibia",title:"Amphibia",kind:"show",video:"XX3uta-AuEg",
+    playlist:"PLLhOnau-tupSWJgUAM4IOtu5svHUNFDFM",
+    desc:"Amphibia YouTube playlist"
+  },
+  {
+    id:"phineas",title:"Phineas and Ferb",kind:"show",video:"S6vTpKRvm2w",
+    desc:"Phineas and Ferb episodes",
+    episodes:makeEpisodes([
+      ["Rollercoaster / Candace Loses Her Head",0,"00:00"],
+      ["The Fast and the Phineas / Lawn Gnome Beach Party of Terror!",1350,"22:30"],
+      ["The Magnificent Few / S'winter",2700,"45:00"],["Are You My Mummy? / Flop Starz",4050,"1:07:30"],
+      ["Raging Bully / Lights, Candace, Action!",5408,"1:30:08"],
+      ["Get That Bigfoot Outa My Face! / Tree To Get Ready",6757,"1:52:37"],
+      ["It's About Time! (Part 1 & 2)",8107,"2:15:07"],["Jerk De Soleil / Toy to the World",9457,"2:37:37"],
+      ["One Good Scare Ought To Do It!",10830,"3:00:30"],["Hard Day's Knight / I, Brobot",12180,"3:23:00"],
+      ["Mom's Birthday Episode / Journey to the Center of Candace",13531,"3:45:31"],
+      ["Run Away Runway / I Scream, You Scream",14881,"4:08:01"],
+      ["It's a Mud, Mud, Mud, Mud World / The Ballad of Badbeard",16232,"4:30:32"],
+      ["Dude, We're Gettin' the Band Back Together! (Part 1 & 2)",17582,"4:53:02"],
+      ["Ready for the Bettys / The Flying Fishmonger",18933,"5:15:33"],
+      ["Phineas and Ferb Get Busted",20283,"5:38:03"],
+      ["Greece Lightning / Leave the Busting to Us!",21634,"6:00:34"],
+      ["Crack That Whip / The Best Lazy Day Ever",22985,"6:23:05"],
+      ["Boyfriend From 27,000 B.C. / Voyage to the Bottom of Buford",24343,"6:45:43"],
+      ["Put That Putter Away / Does This Duckbill Make Me Look Fat?",25693,"7:08:13"],
+      ["Traffic Cam Caper / Bowl-R-Rama Drama",27044,"7:30:44"],
+      ["The Monster of Phineas-n-Ferbenstein / Oil on Candace",28394,"7:53:14"],
+      ["Unfair Science Fair / Unfair Science Fair Redux",29744,"8:15:44"],
+      ["Out to Launch",31095,"8:38:15"],["Got Game? / Comet Kermilian",32445,"9:00:45"],
+      ["Out of Toon / Hail Doofania!",33802,"9:23:22"]
+    ])
+  },
+  {
+    id:"geometry",title:"The Worst Geometry Dash Level",kind:"game",
+    video:"dde3K5DSvso",desc:"Geometry Dash gaming video",
+    episodes:[{title:"The Worst Geometry Dash Level",start:0,stamp:"Video"}]
+  }
+];
+
+let customItems = JSON.parse(localStorage.getItem("watcherCustomV3") || "[]");
+let savedShows = JSON.parse(localStorage.getItem("watcherSavedShowsV3") || "[]");
+let savedEpisodes = JSON.parse(localStorage.getItem("watcherSavedEpisodesV3") || "[]");
+let blockedEpisodes = JSON.parse(localStorage.getItem("watcherBlockedEpisodesV3") || "[]");
+
+let activeTab = "shows";
+let current = null;
+let currentEpisode = 0;
+
+const $ = id => document.getElementById(id);
+const allItems = () => [...builtIns,...customItems];
+const thumb = item => item.video ? `https://img.youtube.com/vi/${item.video}/hqdefault.jpg` : "";
+const episodeKey = (item,index) => `${item.id}::${index}`;
+const isShowSaved = id => savedShows.includes(id);
+const isEpisodeSaved = (item,index) => savedEpisodes.includes(episodeKey(item,index));
+const isBlocked = (item,index) => blockedEpisodes.includes(episodeKey(item,index));
+
+function persist(){
+  localStorage.setItem("watcherCustomV3",JSON.stringify(customItems));
+  localStorage.setItem("watcherSavedShowsV3",JSON.stringify(savedShows));
+  localStorage.setItem("watcherSavedEpisodesV3",JSON.stringify(savedEpisodes));
+  localStorage.setItem("watcherBlockedEpisodesV3",JSON.stringify(blockedEpisodes));
+}
+function esc(s){
+  return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+function toggleShowSave(id){
+  savedShows = isShowSaved(id) ? savedShows.filter(x=>x!==id) : [...savedShows,id];
+  persist(); renderBrowse(); updateShowSaveButton();
+}
+function toggleEpisodeSave(item,index){
+  const key=episodeKey(item,index);
+  savedEpisodes = savedEpisodes.includes(key) ? savedEpisodes.filter(x=>x!==key) : [...savedEpisodes,key];
+  persist(); renderEpisodeList();
+}
+function toggleBlock(item,index){
+  const key=episodeKey(item,index);
+  const nowBlocked=!blockedEpisodes.includes(key);
+  blockedEpisodes = nowBlocked ? [...blockedEpisodes,key] : blockedEpisodes.filter(x=>x!==key);
+  persist();
+  if(nowBlocked && current===item && currentEpisode===index){
+    showBlockedScreen(item,index);
+  }
+  renderEpisodeList();
+}
+
+function renderBrowse(){
+  $("browse").classList.remove("hidden");
+  $("watch").classList.add("hidden");
+
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.tab===activeTab));
+  $("pageTitle").textContent=activeTab[0].toUpperCase()+activeTab.slice(1);
+  $("pageNote").textContent=
+    activeTab==="shows" ? "Shows are kept simple — no season menus." :
+    activeTab==="games" ? "Gaming videos are separate from shows." :
+    "Saved shows, videos, and individual episodes.";
+
+  const q=$("search").value.trim().toLowerCase();
+  let items=allItems();
+
+  if(activeTab==="shows") items=items.filter(x=>x.kind==="show");
+  if(activeTab==="games") items=items.filter(x=>x.kind==="game");
+
+  if(activeTab!=="saved"){
+    items=items.filter(x=>(x.title+" "+(x.desc||"")).toLowerCase().includes(q));
+    $("grid").innerHTML = items.length ? items.map(cardHtml).join("") : `<div class="empty">Nothing here yet.</div>`;
+    bindBrowseCards();
+    return;
+  }
+
+  const showItems=allItems().filter(x=>isShowSaved(x.id)).filter(x=>(x.title+" "+(x.desc||"")).toLowerCase().includes(q));
+  const episodeItems=[];
+  for(const item of allItems()){
+    if(!item.episodes) continue;
+    item.episodes.forEach((ep,i)=>{
+      if(isEpisodeSaved(item,i) && (ep.title+" "+item.title).toLowerCase().includes(q)){
+        episodeItems.push({item,ep,index:i});
+      }
+    });
+  }
+
+  let out="";
+  if(showItems.length){
+    out+=`<div class="savedLabel">SAVED SHOWS & VIDEOS</div>`+showItems.map(cardHtml).join("");
+  }
+  if(episodeItems.length){
+    out+=`<div class="savedLabel">SAVED EPISODES</div>`+episodeItems.map(savedEpisodeCardHtml).join("");
+  }
+  $("grid").innerHTML=out||`<div class="empty">Nothing saved yet. Tap ☆ on a show or episode.</div>`;
+  bindBrowseCards();
+  document.querySelectorAll("[data-open-episode]").forEach(el=>{
+    el.onclick=e=>{
+      if(e.target.closest("[data-episode-save]")) return;
+      const [id,index]=el.dataset.openEpisode.split("::");
+      openItem(id,Number(index));
+    };
+  });
+  document.querySelectorAll("[data-episode-save]").forEach(btn=>{
+    btn.onclick=e=>{
+      e.stopPropagation();
+      const [id,index]=btn.dataset.episodeSave.split("::");
+      const item=allItems().find(x=>x.id===id);
+      if(item) toggleEpisodeSave(item,Number(index));
+    };
+  });
+}
+function cardHtml(item){
+  return `<article class="card ${item.kind==="game"?"game":""}" data-open="${item.id}">
+    <button class="star ${isShowSaved(item.id)?"on":""}" data-save="${item.id}">${isShowSaved(item.id)?"★":"☆"}</button>
+    <div class="cover" style="background-image:url('${thumb(item)}')">
+      <span class="badge">${item.kind==="game"?"GAME":item.playlist?"PLAYLIST":"SHOW"}</span>
+    </div>
+    <div class="body">
+      <div class="title">${esc(item.title)}</div>
+      <div class="meta">${item.kind==="game"?"Gaming video":item.playlist?"YouTube playlist":"Show"}</div>
+      <div class="desc">${esc(item.desc||"")}</div>
+    </div>
+  </article>`;
+}
+function savedEpisodeCardHtml(x){
+  const blocked=isBlocked(x.item,x.index);
+  return `<article class="card episodeCard ${blocked?"blocked":""}" data-open-episode="${x.item.id}::${x.index}">
+    <button class="star on" data-episode-save="${x.item.id}::${x.index}">★</button>
+    <div class="cover" style="background-image:url('${thumb(x.item)}')">
+      <span class="badge ${blocked?"blockBadge":""}">${blocked?"BLOCKED":"EPISODE"}</span>
+    </div>
+    <div class="body">
+      <div class="title">${esc(x.ep.title)}</div>
+      <div class="meta">${esc(x.item.title)} • ${esc(x.ep.stamp||"Video")}</div>
+    </div>
+  </article>`;
+}
+function bindBrowseCards(){
+  document.querySelectorAll("[data-open]").forEach(card=>{
+    card.onclick=e=>{
+      if(e.target.closest("[data-save]")) return;
+      openItem(card.dataset.open);
+    };
+  });
+  document.querySelectorAll("[data-save]").forEach(btn=>{
+    btn.onclick=e=>{e.stopPropagation();toggleShowSave(btn.dataset.save)};
+  });
+}
+
+function openItem(id,startIndex=0){
+  current=allItems().find(x=>x.id===id);
+  if(!current) return;
+  currentEpisode=startIndex||0;
+  $("browse").classList.add("hidden");
+  $("watch").classList.remove("hidden");
+  $("viewer").classList.toggle("gameMode",current.kind==="game");
+  $("kicker").textContent=current.kind==="game"?"GAME VIDEO":current.title.toUpperCase();
+  $("sideTitle").textContent=current.playlist?"Playlist":"Episodes";
+  updateShowSaveButton();
+
+  if(current.playlist){
+    renderPlaylist();
+  }else{
+    renderEpisodeList();
+    playEpisode(currentEpisode,false);
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function updateShowSaveButton(){
+  if(!current) return;
+  $("saveShowBtn").textContent=isShowSaved(current.id)?"★ Saved":"☆ Save Show";
+}
+function renderPlaylist(){
+  $("episodeList").innerHTML=`<div class="playlistInfo">This is a YouTube playlist. There are no seasons. Use the playlist controls inside the player to choose a video.</div>`;
+  const src=`https://www.youtube.com/embed/${current.video}?list=${current.playlist}&rel=0`;
+  setIframe(src);
+  $("viewerTitle").textContent=current.title;
+  $("viewerDesc").textContent=current.desc||"";
+  $("youtubeLink").href=`https://www.youtube.com/watch?v=${current.video}&list=${current.playlist}`;
+  $("fallback").classList.remove("hidden");
+  $("prevBtn").disabled=true;
+  $("nextBtn").disabled=true;
+}
+function renderEpisodeList(){
+  if(!current || !current.episodes) return;
+  $("episodeList").innerHTML=current.episodes.map((ep,i)=>{
+    const blocked=isBlocked(current,i);
+    return `<div class="ep ${i===currentEpisode?"on":""} ${blocked?"blocked":""}" data-play="${i}">
+      <div class="epThumb" style="background-image:url('${thumb(current)}')"></div>
+      <div class="epText">
+        <div class="epTitle">${esc(ep.title)}</div>
+        <small>${esc(ep.stamp||`Episode ${i+1}`)}${blocked?" • BLOCKED":""}</small>
+      </div>
+      <div class="epBtns">
+        <button class="mini ${isEpisodeSaved(current,i)?"saved":""}" data-ep-save="${i}" title="Save episode">${isEpisodeSaved(current,i)?"★":"☆"}</button>
+        <button class="mini ${blocked?"blocked":""}" data-block="${i}" title="${blocked?"Unblock":"Block"} episode">${blocked?"Unblock":"Block"}</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  document.querySelectorAll("[data-play]").forEach(row=>{
+    row.onclick=e=>{
+      if(e.target.closest("button")) return;
+      const index=Number(row.dataset.play);
+      if(isBlocked(current,index)){
+        showBlockedScreen(current,index);
+        return;
+      }
+      playEpisode(index,true);
+    };
+  });
+  document.querySelectorAll("[data-ep-save]").forEach(btn=>{
+    btn.onclick=e=>{e.stopPropagation();toggleEpisodeSave(current,Number(btn.dataset.epSave))};
+  });
+  document.querySelectorAll("[data-block]").forEach(btn=>{
+    btn.onclick=e=>{e.stopPropagation();toggleBlock(current,Number(btn.dataset.block))};
+  });
+}
+function setIframe(src){
+  $("video").innerHTML=`<iframe src="${src}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+}
+function showBlockedScreen(item,index){
+  currentEpisode=index;
+  const ep=item.episodes[index];
+  $("video").innerHTML=`<div class="blockedScreen"><div><strong>🚫 Episode Blocked</strong><span>${esc(ep.title)} will not play until you unblock it.</span></div></div>`;
+  $("viewerTitle").textContent=ep.title;
+  $("viewerDesc").textContent="This episode is blocked.";
+  $("fallback").classList.add("hidden");
+  updateNavButtons();
+}
+function playEpisode(index,autoplay=true){
+  if(!current || !current.episodes) return;
+  index=Math.max(0,Math.min(current.episodes.length-1,index));
+  if(isBlocked(current,index)){
+    showBlockedScreen(current,index);
+    renderEpisodeList();
+    return;
+  }
+  currentEpisode=index;
+  const ep=current.episodes[index];
+  let src=`https://www.youtube.com/embed/${current.video}?start=${ep.start||0}&rel=0`;
+  if(autoplay) src+="&autoplay=1";
+
+  const nextIndex=findNextPlayable(index,1,false);
+  if(nextIndex!==null) src+=`&end=${current.episodes[nextIndex].start}`;
+
+  setIframe(src);
+  $("viewerTitle").textContent=ep.title;
+  $("viewerDesc").textContent=current.desc||"";
+  $("youtubeLink").href=`https://www.youtube.com/watch?v=${current.video}${ep.start?`&t=${ep.start}s`:""}`;
+  $("fallback").classList.remove("hidden");
+  updateNavButtons();
+  renderEpisodeList();
+}
+function findNextPlayable(from,direction,wrap=false){
+  if(!current || !current.episodes) return null;
+  let i=from+direction;
+  while(i>=0 && i<current.episodes.length){
+    if(!isBlocked(current,i)) return i;
+    i+=direction;
+  }
+  if(wrap){
+    i=direction>0?0:current.episodes.length-1;
+    while(i!==from){
+      if(!isBlocked(current,i)) return i;
+      i+=direction;
+      if(i<0||i>=current.episodes.length) break;
+    }
+  }
+  return null;
+}
+function updateNavButtons(){
+  if(!current || !current.episodes){
+    $("prevBtn").disabled=true;$("nextBtn").disabled=true;return;
+  }
+  $("prevBtn").disabled=findNextPlayable(currentEpisode,-1,false)===null;
+  $("nextBtn").disabled=findNextPlayable(currentEpisode,1,false)===null;
+}
+function parseYoutube(url){
+  try{
+    const u=new URL(url);
+    let video=null;
+    if(u.hostname.includes("youtu.be")) video=u.pathname.slice(1);
+    else if(u.pathname.startsWith("/shorts/")) video=u.pathname.split("/")[2];
+    else video=u.searchParams.get("v");
+    return {video,playlist:u.searchParams.get("list")};
+  }catch{return {video:null,playlist:null}}
+}
+
+document.querySelectorAll(".tab").forEach(btn=>{
+  btn.onclick=()=>{activeTab=btn.dataset.tab;renderBrowse()};
+});
+$("search").oninput=renderBrowse;
+$("backBtn").onclick=renderBrowse;
+$("saveShowBtn").onclick=()=>current&&toggleShowSave(current.id);
+$("prevBtn").onclick=()=>{
+  const i=findNextPlayable(currentEpisode,-1,false);
+  if(i!==null) playEpisode(i,true);
+};
+$("nextBtn").onclick=()=>{
+  const i=findNextPlayable(currentEpisode,1,false);
+  if(i!==null) playEpisode(i,true);
+};
+$("restartBtn").onclick=()=>{
+  if(current?.playlist) renderPlaylist();
+  else if(current && !isBlocked(current,currentEpisode)) playEpisode(currentEpisode,true);
+  else if(current) showBlockedScreen(current,currentEpisode);
+};
+
+$("importBtn").onclick=()=>{$("modal").classList.remove("hidden");$("importError").textContent=""};
+$("cancelImport").onclick=()=>$("modal").classList.add("hidden");
+$("addImport").onclick=()=>{
+  const info=parseYoutube($("importUrl").value.trim());
+  if(!info.video){$("importError").textContent="That does not look like a YouTube video link.";return}
+  const kind=$("importType").value==="game"?"game":"show";
+  const title=$("importTitle").value.trim()||"Imported Video";
+  const id="custom-"+Date.now();
+  customItems.push({
+    id,title,kind,video:info.video,playlist:info.playlist||null,
+    desc:$("importDesc").value.trim()||"Imported from YouTube",
+    episodes:info.playlist?null:[{title,start:0,stamp:"Video"}]
+  });
+  savedShows=[...new Set([...savedShows,id])];
+  persist();
+  $("modal").classList.add("hidden");
+  $("importUrl").value="";$("importTitle").value="";$("importDesc").value="";
+  activeTab=kind==="game"?"games":"shows";
+  renderBrowse();
+};
+
+renderBrowse();
+</script>
+</body>
+</html>

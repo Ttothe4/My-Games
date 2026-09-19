@@ -1,0 +1,1549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Code Place</title>
+<style>
+:root{
+  --bg:#0f1117;
+  --panel:#171a22;
+  --panel2:#10131a;
+  --line:#292e3a;
+  --text:#f6f7fb;
+  --muted:#9ba3b4;
+  --blue:#5b8cff;
+  --green:#55d68b;
+  --red:#ff6b6b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+button,textarea,select,input{font:inherit}
+button{cursor:pointer}
+.app{height:100%;display:grid;grid-template-rows:58px 1fr}
+.top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;border-bottom:1px solid var(--line);background:#12151c
+}
+.brand{font-weight:800;font-size:18px}
+.brand span{color:var(--blue)}
+.nav{display:flex;gap:8px}
+.nav button,.btn,select{
+  border:1px solid var(--line);background:#1b202b;color:white;
+  border-radius:8px;padding:8px 11px;font-weight:700;font-size:13px
+}
+.nav button.active,.btn.primary{background:var(--blue);border-color:var(--blue)}
+.btn.good{background:#173426;border-color:#28523c;color:#bff3d3}
+.btn.danger{background:#351d22;border-color:#5a2a33;color:#ffc7ce}
+select{outline:none}
+.page{display:none;height:100%;min-height:0}
+.page.active{display:block}
+
+/* CODE */
+.code-page{padding:10px;height:100%}
+.code-grid{height:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.panel{border:1px solid var(--line);background:var(--panel);border-radius:10px;overflow:hidden;min-height:0}
+.editor-panel{display:grid;grid-template-rows:auto 1fr 42px}
+.panel-head{
+  min-height:48px;display:flex;align-items:center;justify-content:space-between;
+  gap:8px;padding:7px 12px;border-bottom:1px solid var(--line)
+}
+.panel-head strong{font-size:13px}
+.actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+textarea{
+  width:100%;height:100%;border:0;outline:0;resize:none;
+  background:#0c0f15;color:#e8eef9;padding:14px;
+  font:14px/1.55 Consolas,Monaco,monospace;tab-size:2
+}
+.status{
+  border-top:1px solid var(--line);padding:0 12px;
+  display:flex;align-items:center;color:var(--muted);font-size:12px
+}
+.preview-panel{display:grid;grid-template-rows:48px 1fr}
+.preview-wrap{background:white;margin:10px;border-radius:8px;overflow:hidden}
+iframe{width:100%;height:100%;border:0;background:white}
+
+/* CREATIONS */
+.creations-page{height:100%;padding:14px;overflow:auto}
+.creation-top{
+  max-width:1180px;margin:0 auto 14px;
+  display:flex;align-items:end;justify-content:space-between;gap:16px
+}
+.creation-top h1{margin:0 0 5px;font-size:24px}
+.creation-top p{margin:0;color:var(--muted);font-size:13px}
+.cards{
+  max-width:1180px;margin:auto;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px
+}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:10px;overflow:hidden}
+.card-preview{height:150px;background:white;border-bottom:1px solid var(--line);position:relative}
+.card-preview iframe{pointer-events:none}
+.card-body{padding:12px}
+.card h3{font-size:15px;margin:0 0 4px}
+.card p{font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.4;min-height:34px}
+.card-actions{display:flex;gap:7px;flex-wrap:wrap}
+.small{font-size:12px;padding:7px 9px}
+.tag{
+  display:inline-block;font-size:10px;font-weight:800;
+  background:#242b39;padding:4px 6px;border-radius:6px;margin-bottom:7px;color:#cbd4e3
+}
+.my-tag{color:#bff4d4;background:rgba(85,214,139,.12)}
+
+
+/* BLOCKS LANGUAGE */
+.editor-area{min-height:0;position:relative}
+.blocks-editor{
+  display:none;height:100%;min-height:0;background:#0c0f15;
+  grid-template-columns:120px 190px 1fr
+}
+.blocks-editor.active{display:grid}
+.block-categories{
+  padding:8px;background:#10141c;border-right:1px solid var(--line);overflow:auto
+}
+.category-btn{
+  width:100%;border:0;border-radius:8px;padding:9px 8px;margin-bottom:5px;
+  color:white;text-align:left;font-size:11px;font-weight:800
+}
+.block-palette{
+  padding:10px;background:#121720;border-right:1px solid var(--line);overflow:auto
+}
+.palette-title{font-size:12px;font-weight:800;margin-bottom:9px;color:#dfe6f2}
+.palette-block,.stack-block{
+  border:0;border-radius:8px;color:white;padding:9px 10px;margin-bottom:7px;
+  font-size:12px;font-weight:750;text-align:left;box-shadow:inset 0 -2px rgba(0,0,0,.15)
+}
+.palette-block{width:100%;cursor:pointer}
+.palette-block:hover{filter:brightness(1.08)}
+.block-workspace{padding:10px;overflow:auto;background:#0b0f15}
+.block-workspace-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px
+}
+.block-workspace-head strong{font-size:12px}
+.stack-empty{
+  border:1px dashed #394254;border-radius:9px;padding:22px;text-align:center;
+  color:#707b90;font-size:12px
+}
+.stack-block{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  cursor:grab;user-select:none
+}
+.stack-block.dragging{opacity:.45}
+.stack-block .remove-block{
+  border:0;background:rgba(0,0,0,.18);color:white;width:24px;height:24px;
+  border-radius:6px;padding:0;font-weight:900
+}
+.block-help{font-size:10px;color:var(--muted);line-height:1.35;margin:0 0 9px}
+
+/* Scratch-like category colors */
+.c-motion{background:#4c97ff}
+.c-looks{background:#9966ff}
+.c-sound{background:#cf63cf}
+.c-events{background:#ffbf00;color:#332800}
+.c-control{background:#ffab19;color:#3b2500}
+.c-sensing{background:#5cb1d6}
+.c-operators{background:#59c059}
+.c-variables{background:#ff8c1a}
+.c-myblocks{background:#ff6680}
+
+.template-filter{
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap
+}
+.template-filter label{font-size:11px;color:var(--muted);font-weight:700}
+
+@media(max-width:900px){
+  .blocks-editor{grid-template-columns:105px 165px 1fr}
+}
+
+/* MODAL */
+.modal{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+  align-items:center;justify-content:center;padding:16px;z-index:20
+}
+.modal.show{display:flex}
+.modal-box{
+  width:min(900px,100%);height:min(82vh,720px);
+  display:grid;grid-template-rows:auto 1fr auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden
+}
+.modal-title{
+  display:flex;justify-content:space-between;align-items:center;padding:12px;
+  border-bottom:1px solid var(--line)
+}
+.modal-content{min-height:0;background:#0c0f15}
+.modal-content pre{
+  height:100%;margin:0;padding:14px;overflow:auto;color:#e7edf8;
+  font:13px/1.5 Consolas,monospace;white-space:pre-wrap
+}
+.modal-content iframe{width:100%;height:100%;background:white}
+.modal-actions{
+  padding:10px;border-top:1px solid var(--line);
+  display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap
+}
+
+@media(max-width:800px){
+  .app{height:auto;min-height:100%}
+  .code-grid{grid-template-columns:1fr;grid-template-rows:550px 550px}
+  .code-page{height:auto}
+  .top{gap:8px}
+  .brand{font-size:16px}
+  .nav button{padding:7px 9px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">&lt;<span>Code</span> Place/&gt;</div>
+    <div class="nav">
+      <button id="codeTab" class="active">Code</button>
+      <button id="creationsTab">Creations</button>
+    </div>
+  </header>
+
+  <section id="codePage" class="page active">
+    <div class="code-page">
+      <div class="code-grid">
+        <div class="panel editor-panel">
+          <div class="panel-head">
+            <div class="actions">
+              <strong id="fileName">index.html</strong>
+              <select id="languageSelect">
+                <option value="web">Web</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="javascript">JavaScript</option>
+                <option value="blocks">Blocks</option>
+              </select>
+            </div>
+            <div class="actions">
+              <button class="btn" id="clearBtn">Clear</button>
+              <button class="btn" id="newBtn">New</button>
+              <button class="btn good" id="saveBtn">Save</button>
+              <button class="btn primary" id="runBtn">Run</button>
+            </div>
+          </div>
+          <div class="editor-area">
+            <textarea id="editor" spellcheck="false"></textarea>
+            <div id="blocksEditor" class="blocks-editor">
+              <div id="blockCategories" class="block-categories"></div>
+              <div class="block-palette">
+                <div id="paletteTitle" class="palette-title">Motion</div>
+                <p class="block-help">Click a block to add it to your program.</p>
+                <div id="blockPalette"></div>
+              </div>
+              <div class="block-workspace">
+                <div class="block-workspace-head">
+                  <strong>My Block Stack</strong>
+                  <button id="clearBlocksBtn" class="btn small">Clear Blocks</button>
+                </div>
+                <p class="block-help">Drag blocks up or down to reorder them. Events split your program into scripts.</p>
+                <div id="blockStack"></div>
+              </div>
+            </div>
+          </div>
+          <div class="status" id="status">Ready to code.</div>
+        </div>
+
+        <div class="panel preview-panel">
+          <div class="panel-head">
+            <strong>Preview</strong>
+            <span id="modeLabel" style="font-size:11px;color:var(--muted)">HTML + CSS + JavaScript</span>
+          </div>
+          <div class="preview-wrap">
+            <iframe id="preview" sandbox="allow-scripts allow-modals allow-forms"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="creationsPage" class="page">
+    <div class="creations-page">
+      <div class="creation-top">
+        <div>
+          <h1>Creations</h1>
+          <p>Play them, view their code, or use the code in your editor.</p>
+        </div>
+        <div class="template-filter">
+          <label for="creationFilter">Templates:</label>
+          <select id="creationFilter">
+            <option value="all">All</option>
+            <option value="web">Web</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="javascript">JavaScript</option>
+            <option value="blocks">Blocks</option>
+          </select>
+          <button class="btn primary" id="newProjectBtn">+ New Project</button>
+        </div>
+      </div>
+      <div class="cards" id="cards"></div>
+    </div>
+  </section>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <strong id="modalName">Creation</strong>
+      <button class="btn small" id="closeModal">Close</button>
+    </div>
+    <div class="modal-content" id="modalContent"></div>
+    <div class="modal-actions">
+      <button class="btn" id="viewCodeBtn">View Code</button>
+      <button class="btn" id="playBtn">Play</button>
+      <button class="btn" id="copyBtn">Copy Code</button>
+      <button class="btn primary" id="useBtn">Use This Code</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const editor = document.getElementById("editor");
+const preview = document.getElementById("preview");
+const status = document.getElementById("status");
+const cards = document.getElementById("cards");
+const languageSelect = document.getElementById("languageSelect");
+const fileName = document.getElementById("fileName");
+const modeLabel = document.getElementById("modeLabel");
+const modal = document.getElementById("modal");
+const modalContent = document.getElementById("modalContent");
+const blocksEditor = document.getElementById("blocksEditor");
+const blockCategories = document.getElementById("blockCategories");
+const blockPalette = document.getElementById("blockPalette");
+const paletteTitle = document.getElementById("paletteTitle");
+const blockStack = document.getElementById("blockStack");
+const clearBlocksBtn = document.getElementById("clearBlocksBtn");
+const creationFilter = document.getElementById("creationFilter");
+
+const codePage = document.getElementById("codePage");
+const creationsPage = document.getElementById("creationsPage");
+const codeTab = document.getElementById("codeTab");
+const creationsTab = document.getElementById("creationsTab");
+
+const runBtn = document.getElementById("runBtn");
+const clearBtn = document.getElementById("clearBtn");
+const newBtn = document.getElementById("newBtn");
+const saveBtn = document.getElementById("saveBtn");
+const newProjectBtn = document.getElementById("newProjectBtn");
+
+const closeModal = document.getElementById("closeModal");
+const viewCodeBtn = document.getElementById("viewCodeBtn");
+const playBtn = document.getElementById("playBtn");
+const copyBtn = document.getElementById("copyBtn");
+const useBtn = document.getElementById("useBtn");
+
+const modeInfo = {
+  web:{name:"Web",file:"index.html",label:"HTML + CSS + JavaScript"},
+  html:{name:"HTML",file:"index.html",label:"HTML"},
+  css:{name:"CSS",file:"style.css",label:"CSS"},
+  javascript:{name:"JavaScript",file:"script.js",label:"JavaScript"},
+  blocks:{name:"Blocks",file:"blocks.project",label:"Visual Blocks"}
+};
+
+const templates = {
+  web:`<!doctype html>
+<html>
+<head>
+<style>
+body{
+  font-family:Arial;
+  text-align:center;
+  padding:40px;
+  background:#eef3ff;
+}
+</style>
+</head>
+<body>
+  <h1>Hello!</h1>
+  <p>I made this website.</p>
+  <button onclick="alert('Nice!')">Click Me</button>
+</body>
+</html>`,
+
+  html:`<h1>Hello!</h1>
+<p>This is my HTML page.</p>
+<button>Click Me</button>`,
+
+  css:`body{
+  font-family:Arial;
+  text-align:center;
+  padding:40px;
+  background:#eef3ff;
+}
+
+h1{color:#315fd6}
+
+button{
+  padding:12px 18px;
+  border-radius:8px;
+}`,
+
+  javascript:`let count = 0;
+
+document.body.innerHTML = \`
+  <h1>JavaScript Clicker</h1>
+  <h2 id="score">0</h2>
+  <button id="add">+1</button>
+\`;
+
+document.getElementById("add").onclick = function(){
+  count++;
+  document.getElementById("score").textContent = count;
+};`,
+  blocks:`[]`
+};
+
+
+const blockCategoriesData = [
+  {id:"motion",name:"Motion",className:"c-motion"},
+  {id:"looks",name:"Looks",className:"c-looks"},
+  {id:"sound",name:"Sound",className:"c-sound"},
+  {id:"events",name:"Events",className:"c-events"},
+  {id:"control",name:"Control",className:"c-control"},
+  {id:"sensing",name:"Sensing",className:"c-sensing"},
+  {id:"operators",name:"Operators",className:"c-operators"},
+  {id:"variables",name:"Variables",className:"c-variables"},
+  {id:"myblocks",name:"My Blocks",className:"c-myblocks"}
+];
+
+const blockDefs = [
+  {id:"move10",cat:"motion",label:"move 10 steps"},
+  {id:"turn15",cat:"motion",label:"turn 15 degrees"},
+  {id:"center",cat:"motion",label:"go to center"},
+  {id:"changex",cat:"motion",label:"change x by 20"},
+  {id:"changey",cat:"motion",label:"change y by 20"},
+
+  {id:"sayhello",cat:"looks",label:"say Hello!"},
+  {id:"saywin",cat:"looks",label:"say I did it!"},
+  {id:"grow",cat:"looks",label:"change size by 20"},
+  {id:"color",cat:"looks",label:"change color effect"},
+  {id:"hide",cat:"looks",label:"hide"},
+  {id:"show",cat:"looks",label:"show"},
+
+  {id:"beep",cat:"sound",label:"play beep"},
+  {id:"highbeep",cat:"sound",label:"play high note"},
+  {id:"volumeup",cat:"sound",label:"change volume by 10"},
+
+  {id:"flag",cat:"events",label:"when green flag clicked"},
+  {id:"space",cat:"events",label:"when space key pressed"},
+  {id:"clicksprite",cat:"events",label:"when character clicked"},
+
+  {id:"wait1",cat:"control",label:"wait 1 second"},
+  {id:"repeat3",cat:"control",label:"repeat next block 3 times"},
+  {id:"repeat10",cat:"control",label:"repeat next block 10 times"},
+  {id:"bounce",cat:"control",label:"if touching edge, bounce"},
+
+  {id:"mouse",cat:"sensing",label:"go to mouse"},
+  {id:"timer",cat:"sensing",label:"say timer"},
+  {id:"touchingedge",cat:"sensing",label:"touching edge?"},
+
+  {id:"randommove",cat:"operators",label:"move random -50 to 50"},
+  {id:"scoregreater",cat:"operators",label:"if score > 5 say Winner"},
+  {id:"double",cat:"operators",label:"score = score × 2"},
+
+  {id:"setscore",cat:"variables",label:"set score to 0"},
+  {id:"addscore",cat:"variables",label:"change score by 1"},
+  {id:"showscore",cat:"variables",label:"show score"},
+  {id:"hidescore",cat:"variables",label:"hide score"},
+
+  {id:"jump",cat:"myblocks",label:"my block: jump"},
+  {id:"dance",cat:"myblocks",label:"my block: dance"},
+  {id:"celebrate",cat:"myblocks",label:"my block: celebrate"}
+];
+
+let blockProgram = [];
+let activeBlockCategory = "motion";
+
+function blockDef(id){
+  return blockDefs.find(b=>b.id===id);
+}
+
+function categoryData(id){
+  return blockCategoriesData.find(c=>c.id===id);
+}
+
+function renderBlockCategories(){
+  blockCategories.innerHTML="";
+  blockCategoriesData.forEach(cat=>{
+    const btn=document.createElement("button");
+    btn.className="category-btn "+cat.className;
+    btn.textContent=cat.name;
+    btn.onclick=()=>{
+      activeBlockCategory=cat.id;
+      renderBlockPalette();
+    };
+    blockCategories.appendChild(btn);
+  });
+}
+
+function renderBlockPalette(){
+  const cat=categoryData(activeBlockCategory);
+  paletteTitle.textContent=cat.name;
+  blockPalette.innerHTML="";
+  blockDefs.filter(b=>b.cat===activeBlockCategory).forEach(def=>{
+    const btn=document.createElement("button");
+    btn.className="palette-block "+cat.className;
+    btn.textContent=def.label;
+    btn.onclick=()=>{
+      blockProgram.push(def.id);
+      saveBlocksDraft();
+      renderBlockStack();
+    };
+    blockPalette.appendChild(btn);
+  });
+}
+
+function renderBlockStack(){
+  blockStack.innerHTML="";
+  if(blockProgram.length===0){
+    const empty=document.createElement("div");
+    empty.className="stack-empty";
+    empty.textContent="Add blocks from the left.";
+    blockStack.appendChild(empty);
+    return;
+  }
+
+  blockProgram.forEach((id,index)=>{
+    const def=blockDef(id);
+    if(!def)return;
+    const cat=categoryData(def.cat);
+    const row=document.createElement("div");
+    row.className="stack-block "+cat.className;
+    row.draggable=true;
+    row.dataset.index=index;
+    row.innerHTML=`<span>${escapeHtml(def.label)}</span><button class="remove-block">×</button>`;
+
+    row.querySelector(".remove-block").onclick=e=>{
+      e.stopPropagation();
+      blockProgram.splice(index,1);
+      saveBlocksDraft();
+      renderBlockStack();
+    };
+
+    row.addEventListener("dragstart",()=>{
+      row.classList.add("dragging");
+      row.dataset.dragging="true";
+    });
+    row.addEventListener("dragend",()=>{
+      row.classList.remove("dragging");
+      delete row.dataset.dragging;
+    });
+    row.addEventListener("dragover",e=>e.preventDefault());
+    row.addEventListener("drop",e=>{
+      e.preventDefault();
+      const dragging=[...blockStack.querySelectorAll(".stack-block")].find(x=>x.dataset.dragging==="true");
+      if(!dragging)return;
+      const from=Number(dragging.dataset.index);
+      const to=index;
+      const [moved]=blockProgram.splice(from,1);
+      blockProgram.splice(to,0,moved);
+      saveBlocksDraft();
+      renderBlockStack();
+    });
+
+    blockStack.appendChild(row);
+  });
+}
+
+function saveBlocksDraft(){
+  localStorage.setItem("codePlaceDraft_blocks",JSON.stringify(blockProgram));
+}
+
+function loadBlocksFromCode(code){
+  try{
+    const parsed=JSON.parse(code||"[]");
+    blockProgram=Array.isArray(parsed)?parsed.filter(id=>blockDef(id)):[];
+  }catch{
+    blockProgram=[];
+  }
+  renderBlockStack();
+  saveBlocksDraft();
+}
+
+function blockCodeString(){
+  return JSON.stringify(blockProgram);
+}
+
+function blockListText(code){
+  try{
+    const ids=JSON.parse(code||"[]");
+    return ids.map(id=>{
+      const d=blockDef(id);
+      return d?d.label:id;
+    }).join("\\n");
+  }catch{
+    return code;
+  }
+}
+
+function buildBlocksPreview(code){
+  let program=[];
+  try{program=JSON.parse(code||"[]")}catch{}
+
+  const safeProgram=JSON.stringify(program);
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+html,body{margin:0;height:100%;font-family:Arial;background:#e8f4ff;overflow:hidden}
+#stage{position:relative;height:100%;background:linear-gradient(#ccecff 0 72%,#99d97b 72%);overflow:hidden}
+#top{position:absolute;left:10px;top:10px;z-index:5;display:flex;gap:8px;align-items:center}
+#flag{border:0;border-radius:8px;background:#35c759;color:white;font-size:20px;padding:8px 12px;cursor:pointer}
+#scoreBox{background:white;border-radius:8px;padding:8px 11px;font-weight:bold;box-shadow:0 3px 10px #0002}
+#sprite{position:absolute;left:calc(50% - 35px);top:calc(60% - 35px);width:70px;height:70px;border-radius:18px;background:#ff9f43;display:grid;place-items:center;font-size:42px;transition:transform .18s,left .18s,top .18s,filter .18s;cursor:pointer;user-select:none}
+#bubble{position:absolute;min-width:70px;max-width:180px;background:white;border-radius:14px;padding:8px 10px;box-shadow:0 4px 16px #0002;display:none;font-size:13px}
+#help{position:absolute;right:10px;top:10px;background:#ffffffcc;padding:7px 9px;border-radius:8px;font-size:11px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="top"><button id="flag">▶</button><div id="scoreBox">Score: <span id="score">0</span></div></div>
+  <div id="help">Green flag • Space key • Click character</div>
+  <div id="bubble"></div>
+  <div id="sprite">😺</div>
+</div>
+<script>
+const program=${safeProgram};
+const sprite=document.getElementById('sprite');
+const bubble=document.getElementById('bubble');
+const scoreEl=document.getElementById('score');
+const stage=document.getElementById('stage');
+let score=0,x=0,y=0,angle=0,size=1,volume=.4,startTime=performance.now();
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function update(){
+  sprite.style.transform='translate('+x+'px,'+y+'px) rotate('+angle+'deg) scale('+size+')';
+}
+function say(text){
+  bubble.textContent=text; bubble.style.display='block';
+  const r=sprite.getBoundingClientRect();
+  bubble.style.left=Math.min(innerWidth-190,r.right+6)+'px';
+  bubble.style.top=Math.max(45,r.top-5)+'px';
+  clearTimeout(window._bubbleTimer);
+  window._bubbleTimer=setTimeout(()=>bubble.style.display='none',1200);
+}
+function beep(freq=440){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.frequency.value=freq;g.gain.value=volume;
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.16);
+  }catch{}
+}
+function edgeBounce(){
+  const r=sprite.getBoundingClientRect();
+  if(r.left<0){x+=25;angle+=180}
+  if(r.right>innerWidth){x-=25;angle+=180}
+  if(r.top<0){y+=25;angle+=180}
+  if(r.bottom>innerHeight){y-=25;angle+=180}
+  update();
+}
+function goMouse(){
+  const mx=window._mouseX||innerWidth/2,my=window._mouseY||innerHeight/2;
+  const r=sprite.getBoundingClientRect();
+  x+=mx-(r.left+r.width/2);y+=my-(r.top+r.height/2);update();
+}
+onmousemove=e=>{window._mouseX=e.clientX;window._mouseY=e.clientY};
+
+async function doBlock(id){
+  if(id==='move10'){x+=Math.cos(angle*Math.PI/180)*30;y+=Math.sin(angle*Math.PI/180)*30;update()}
+  if(id==='turn15'){angle+=15;update()}
+  if(id==='center'){x=0;y=0;angle=0;update()}
+  if(id==='changex'){x+=20;update()}
+  if(id==='changey'){y+=20;update()}
+
+  if(id==='sayhello')say('Hello!')
+  if(id==='saywin')say('I did it!')
+  if(id==='grow'){size+=.2;update()}
+  if(id==='color'){sprite.style.filter='hue-rotate('+(Math.random()*300)+'deg)'}
+  if(id==='hide')sprite.style.visibility='hidden'
+  if(id==='show')sprite.style.visibility='visible'
+
+  if(id==='beep')beep(440)
+  if(id==='highbeep')beep(760)
+  if(id==='volumeup')volume=Math.min(1,volume+.1)
+
+  if(id==='wait1')await sleep(1000)
+  if(id==='bounce')edgeBounce()
+
+  if(id==='mouse')goMouse()
+  if(id==='timer')say(((performance.now()-startTime)/1000).toFixed(1)+' sec')
+  if(id==='touchingedge'){
+    const r=sprite.getBoundingClientRect();
+    say(r.left<=0||r.right>=innerWidth||r.top<=0||r.bottom>=innerHeight?'true':'false');
+  }
+
+  if(id==='randommove'){x+=Math.round(Math.random()*100-50);update()}
+  if(id==='scoregreater'&&score>5) say('Winner!')
+  if(id==='double'){score*=2;scoreEl.textContent=score}
+
+  if(id==='setscore'){score=0;scoreEl.textContent=score}
+  if(id==='addscore'){score++;scoreEl.textContent=score}
+  if(id==='showscore')document.getElementById('scoreBox').style.display='block'
+  if(id==='hidescore')document.getElementById('scoreBox').style.display='none'
+
+  if(id==='jump'){y-=70;update();await sleep(220);y+=70;update()}
+  if(id==='dance'){angle-=25;update();await sleep(120);angle+=50;update();await sleep(120);angle-=25;update()}
+  if(id==='celebrate'){say('🎉 Yay!');beep(660);size+=.25;update();await sleep(250);size-=.25;update()}
+}
+
+function scriptsFor(eventId){
+  const scripts=[];
+  let current=null;
+  for(const id of program){
+    if(['flag','space','clicksprite'].includes(id)){
+      current={event:id,blocks:[]};
+      scripts.push(current);
+    }else{
+      if(!current){
+        current={event:'flag',blocks:[]};
+        scripts.push(current);
+      }
+      current.blocks.push(id);
+    }
+  }
+  return scripts.filter(s=>s.event===eventId);
+}
+
+async function runScript(blocks){
+  for(let i=0;i<blocks.length;i++){
+    const id=blocks[i];
+    if(id==='repeat3'||id==='repeat10'){
+      const times=id==='repeat3'?3:10;
+      const next=blocks[i+1];
+      if(next){
+        for(let n=0;n<times;n++)await doBlock(next);
+        i++;
+      }
+    }else{
+      await doBlock(id);
+    }
+  }
+}
+function trigger(eventId){
+  scriptsFor(eventId).forEach(s=>runScript(s.blocks));
+}
+document.getElementById('flag').onclick=()=>trigger('flag');
+document.onkeydown=e=>{if(e.code==='Space'){e.preventDefault();trigger('space')}};
+sprite.onclick=()=>trigger('clicksprite');
+update();
+<\/script>
+</body>
+</html>`;
+}
+
+/* BUILT-IN CREATIONS */
+const examples = [
+{
+name:"Neon Button",
+desc:"A glowing button on a dark page.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{height:100vh;margin:0;display:grid;place-items:center;background:#111}
+button{font-size:25px;padding:16px 28px;color:white;background:#111;border:2px solid #69f;border-radius:12px;box-shadow:0 0 25px #69f}
+</style></head><body>
+<button onclick="this.innerText='Clicked!'">Click Me</button>
+</body></html>`
+},
+{
+name:"Cool CSS",
+desc:"A colorful CSS design.",
+language:"css",
+code:`body{
+  font-family:Arial;
+  text-align:center;
+  padding:40px;
+  background:linear-gradient(135deg,#dce8ff,#f1ddff);
+}
+h1{font-size:50px}
+button{
+  border:0;padding:14px 22px;border-radius:999px;
+  background:#5b8cff;color:white;font-weight:bold;
+}`
+},
+{
+name:"JavaScript Clicker",
+desc:"Click the button to raise your score.",
+language:"javascript",
+code:`let score = 0;
+document.body.innerHTML = \`
+  <h1>Click Game</h1>
+  <h2 id="score">0</h2>
+  <button id="button">CLICK</button>
+\`;
+document.getElementById("button").onclick = function(){
+  score++;
+  document.getElementById("score").textContent = score;
+};`
+},
+{
+name:"HTML Card",
+desc:"A simple profile card.",
+language:"html",
+code:`<h1>My Profile</h1>
+<p>I like making games and websites.</p>
+<button>Follow</button>`
+},
+
+/* +15 MORE */
+{
+name:"Color Changer",
+desc:"Press a button to change the background.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{font-family:Arial;text-align:center;padding:50px;transition:.25s}
+button{padding:14px 20px;font-size:18px}
+</style></head><body>
+<h1>Color Changer</h1>
+<button onclick="changeColor()">Change Color</button>
+<script>
+function changeColor(){
+  const c=['lightblue','lightgreen','pink','gold','plum','salmon'];
+  document.body.style.background=c[Math.floor(Math.random()*c.length)];
+}
+<\/script></body></html>`
+},
+{
+name:"Counter Game",
+desc:"Add and remove points.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{font-family:Arial;text-align:center;padding:45px;background:#eef5ff}
+#n{font-size:70px;font-weight:bold}
+button{font-size:22px;padding:10px 18px;margin:5px}
+</style></head><body>
+<h1>Counter</h1><div id="n">0</div>
+<button onclick="document.getElementById('n').innerText=+document.getElementById('n').innerText-1">-</button>
+<button onclick="document.getElementById('n').innerText=+document.getElementById('n').innerText+1">+</button>
+</body></html>`
+},
+{
+name:"Guess The Number",
+desc:"Guess a secret number from 1 to 10.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{font-family:Arial;text-align:center;padding:45px;background:#fff5cf}
+input,button{font-size:18px;padding:10px;margin:5px}
+</style></head><body>
+<h1>Guess 1 - 10</h1>
+<input id="g" type="number" min="1" max="10">
+<button onclick="guess()">Guess</button>
+<h2 id="out"></h2>
+<script>
+const secret=Math.floor(Math.random()*10)+1;
+function guess(){
+ const v=+document.getElementById('g').value;
+ document.getElementById('out').textContent=v===secret?'YOU GOT IT!':v<secret?'Too low':'Too high';
+}
+<\/script></body></html>`
+},
+{
+name:"Rock Paper Scissors",
+desc:"Play against the computer.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{font-family:Arial;text-align:center;padding:35px;background:#eaf0ff}
+button{font-size:18px;padding:12px;margin:5px}
+</style></head><body>
+<h1>Rock Paper Scissors</h1>
+<button onclick="play('Rock')">Rock</button>
+<button onclick="play('Paper')">Paper</button>
+<button onclick="play('Scissors')">Scissors</button>
+<h2 id="result">Pick one!</h2>
+<script>
+function play(me){
+ const choices=['Rock','Paper','Scissors'];
+ const cpu=choices[Math.floor(Math.random()*3)];
+ let text='Tie!';
+ if(me!==cpu){
+  const win=(me==='Rock'&&cpu==='Scissors')||(me==='Paper'&&cpu==='Rock')||(me==='Scissors'&&cpu==='Paper');
+  text=win?'You win!':'Computer wins!';
+ }
+ document.getElementById('result').textContent=me+' vs '+cpu+' — '+text;
+}
+<\/script></body></html>`
+},
+{
+name:"Digital Clock",
+desc:"A live clock made with JavaScript.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{margin:0;height:100vh;display:grid;place-items:center;background:#111;color:#70ff9d;font-family:monospace}
+#clock{font-size:50px}
+</style></head><body>
+<div id="clock"></div>
+<script>
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString()}
+tick();setInterval(tick,1000);
+<\/script></body></html>`
+},
+{
+name:"Random Message",
+desc:"Get a different random message each time.",
+language:"javascript",
+code:`const messages=[
+  "Keep coding!",
+  "You made something cool!",
+  "Try changing the colors.",
+  "Add another button.",
+  "Make your own game!"
+];
+
+document.body.innerHTML=\`
+  <h1>Random Message</h1>
+  <button id="go">Give Me One</button>
+  <h2 id="message"></h2>
+\`;
+
+document.getElementById('go').onclick=function(){
+  document.getElementById('message').textContent=messages[Math.floor(Math.random()*messages.length)];
+};`
+},
+{
+name:"Drawing Pad",
+desc:"Draw with your mouse or finger.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{font-family:Arial;text-align:center;margin:0;padding:15px;background:#eee}
+canvas{background:white;border:2px solid #222;touch-action:none;max-width:95%}
+</style></head><body>
+<h2>Drawing Pad</h2>
+<canvas id="c" width="500" height="320"></canvas>
+<script>
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d'); let down=false;
+function pos(e){const r=canvas.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return[(p.clientX-r.left)*canvas.width/r.width,(p.clientY-r.top)*canvas.height/r.height]}
+function start(e){down=true;const [x,y]=pos(e);ctx.beginPath();ctx.moveTo(x,y);e.preventDefault()}
+function move(e){if(!down)return;const [x,y]=pos(e);ctx.lineWidth=5;ctx.lineCap='round';ctx.lineTo(x,y);ctx.stroke();e.preventDefault()}
+function end(){down=false}
+canvas.onmousedown=start;canvas.onmousemove=move;window.onmouseup=end;
+canvas.ontouchstart=start;canvas.ontouchmove=move;canvas.ontouchend=end;
+<\/script></body></html>`
+},
+{
+name:"Bouncing Ball",
+desc:"A ball bounces around the screen.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{margin:0;overflow:hidden;background:#182033}
+#ball{position:absolute;width:55px;height:55px;border-radius:50%;background:#6cf}
+</style></head><body>
+<div id="ball"></div>
+<script>
+let x=20,y=20,dx=3,dy=2.5;
+function go(){
+ x+=dx;y+=dy;
+ if(x<0||x>innerWidth-55)dx*=-1;
+ if(y<0||y>innerHeight-55)dy*=-1;
+ document.getElementById('ball').style.transform='translate('+x+'px,'+y+'px)';
+ requestAnimationFrame(go);
+}
+go();
+<\/script></body></html>`
+},
+{
+name:"To-Do List",
+desc:"Add and remove tasks.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{font-family:Arial;max-width:500px;margin:40px auto;padding:15px;background:#f4f6fa}
+input,button{padding:10px;font-size:16px}
+li{background:white;margin:8px 0;padding:10px;border-radius:8px}
+</style></head><body>
+<h1>To-Do List</h1>
+<input id="task" placeholder="New task">
+<button onclick="add()">Add</button>
+<ul id="list"></ul>
+<script>
+function add(){
+ const task=document.getElementById('task');
+ const list=document.getElementById('list');
+ if(!task.value.trim())return;
+ const li=document.createElement('li');
+ li.textContent=task.value+'  ';
+ const b=document.createElement('button');
+ b.textContent='Done';b.onclick=()=>li.remove();
+ li.appendChild(b);list.appendChild(li);task.value='';
+}
+<\/script></body></html>`
+},
+{
+name:"Calculator",
+desc:"A small working calculator.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{font-family:Arial;text-align:center;padding:30px;background:#222;color:white}
+#screen{width:220px;padding:12px;font-size:22px;text-align:right}
+button{width:52px;height:45px;margin:3px;font-size:18px}
+</style></head><body>
+<h1>Calculator</h1>
+<input id="screen" readonly><br>
+<div id="keys"></div>
+<script>
+const chars=['7','8','9','/','4','5','6','*','1','2','3','-','0','.','C','+'];
+chars.forEach(ch=>{
+ const b=document.createElement('button');b.textContent=ch;
+ b.onclick=()=>{
+   const screen=document.getElementById('screen');
+   if(ch==='C')screen.value='';
+   else screen.value+=ch;
+ };
+ document.getElementById('keys').appendChild(b);
+});
+const eq=document.createElement('button');eq.textContent='=';
+eq.onclick=()=>{
+ const screen=document.getElementById('screen');
+ try{screen.value=Function('return '+screen.value)()}
+ catch{screen.value='Error'}
+};
+document.getElementById('keys').appendChild(eq);
+<\/script></body></html>`
+},
+{
+name:"Tic Tac Toe",
+desc:"A two-player Tic Tac Toe board.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{font-family:Arial;text-align:center;background:#eef1f7}
+#board{display:grid;grid-template-columns:repeat(3,90px);gap:6px;justify-content:center}
+.cell{width:90px;height:90px;font-size:42px;border:0;background:white;border-radius:10px}
+</style></head><body>
+<h1>Tic Tac Toe</h1><h3 id="turn">Turn: X</h3><div id="board"></div>
+<script>
+let player='X',over=false,cells=Array(9).fill('');
+function win(){
+ const w=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+ return w.some(a=>cells[a[0]]&&cells[a[0]]===cells[a[1]]&&cells[a[1]]===cells[a[2]]);
+}
+for(let i=0;i<9;i++){
+ const b=document.createElement('button');b.className='cell';
+ b.onclick=()=>{if(over||cells[i])return;cells[i]=player;b.textContent=player;
+  if(win()){document.getElementById('turn').textContent=player+' wins!';over=true;return}
+  player=player==='X'?'O':'X';document.getElementById('turn').textContent='Turn: '+player;
+ };
+ document.getElementById('board').appendChild(b);
+}
+<\/script></body></html>`
+},
+{
+name:"Keyboard Tester",
+desc:"See which keyboard key you press.",
+language:"javascript",
+code:`document.body.innerHTML=\`
+  <h1>Press Any Key</h1>
+  <div id="key" style="font-size:80px;font-weight:bold">?</div>
+  <p id="info"></p>
+\`;
+
+window.onkeydown=function(e){
+  document.getElementById('key').textContent=e.key===' '?'SPACE':e.key;
+  document.getElementById('info').textContent='Key code: '+e.code;
+};`
+},
+{
+name:"Particle Clicker",
+desc:"Click anywhere to make colorful dots.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{margin:0;height:100vh;background:#111;overflow:hidden}
+.dot{position:absolute;width:25px;height:25px;border-radius:50%;animation:pop .8s forwards}
+@keyframes pop{to{transform:scale(3);opacity:0}}
+</style></head><body>
+<script>
+document.body.onclick=e=>{
+ const d=document.createElement('div');d.className='dot';
+ d.style.left=e.clientX-12+'px';d.style.top=e.clientY-12+'px';
+ d.style.background='hsl('+Math.random()*360+',90%,60%)';
+ document.body.appendChild(d);setTimeout(()=>d.remove(),800);
+};
+<\/script></body></html>`
+},
+{
+name:"Mini Maze",
+desc:"Move the blue player with arrow keys.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{margin:0;background:#eee;font-family:Arial;text-align:center}
+#game{position:relative;width:320px;height:260px;margin:auto;background:white;border:3px solid #222;overflow:hidden}
+#p{position:absolute;width:22px;height:22px;background:#4b83ff;left:10px;top:10px}
+.wall{position:absolute;background:#222}
+#goal{position:absolute;width:30px;height:30px;background:#61d887;right:8px;bottom:8px}
+</style></head><body>
+<h3>Use Arrow Keys</h3>
+<div id="game">
+<div id="goal"></div><div id="p"></div>
+<div class="wall" style="left:70px;top:0;width:20px;height:180px"></div>
+<div class="wall" style="left:160px;top:80px;width:20px;height:180px"></div>
+<div class="wall" style="left:240px;top:0;width:20px;height:180px"></div>
+</div>
+<script>
+let x=10,y=10;
+onkeydown=e=>{
+ if(e.key==='ArrowRight')x+=10;if(e.key==='ArrowLeft')x-=10;
+ if(e.key==='ArrowDown')y+=10;if(e.key==='ArrowUp')y-=10;
+ x=Math.max(0,Math.min(295,x));y=Math.max(0,Math.min(235,y));
+ document.getElementById('p').style.left=x+'px';
+ document.getElementById('p').style.top=y+'px';
+ if(x>270&&y>210)document.querySelector('h3').textContent='YOU WIN!';
+};
+<\/script></body></html>`
+},
+{
+name:"Reaction Timer",
+desc:"Wait for green, then click as fast as you can.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{margin:0;font-family:Arial;text-align:center}
+#box{height:75vh;display:grid;place-items:center;background:#d9534f;font-size:28px;color:white;user-select:none}
+</style></head><body>
+<h2>Reaction Timer</h2><div id="box">Wait...</div>
+<script>
+let ready=false,start=0;
+const box=document.getElementById('box');
+setTimeout(()=>{ready=true;start=performance.now();box.style.background='#28a745';box.textContent='CLICK!'},1000+Math.random()*2500);
+box.onclick=()=>{
+ if(!ready){box.textContent='Too early!';return}
+ box.textContent=Math.round(performance.now()-start)+' ms';
+ ready=false;
+};
+<\/script></body></html>`
+},
+{
+name:"Emoji Catch",
+desc:"Click the moving emoji to score points.",
+language:"web",
+code:`<!doctype html>
+<html><head><style>
+body{margin:0;overflow:hidden;font-family:Arial}
+#score{position:fixed;top:10px;left:10px;font-size:24px}
+#emoji{position:absolute;font-size:45px;cursor:pointer;user-select:none}
+</style></head><body>
+<div id="score">Score: 0</div><div id="emoji">⭐</div>
+<script>
+let s=0;
+function move(){
+ emoji.style.left=Math.random()*(innerWidth-60)+'px';
+ emoji.style.top=60+Math.random()*(innerHeight-120)+'px';
+}
+const emoji=document.getElementById('emoji');
+const score=document.getElementById('score');
+emoji.onclick=()=>{s++;score.textContent='Score: '+s;move()};
+move();
+<\/script></body></html>`
+},
+{
+name:"Password Generator",
+desc:"Make a random password.",
+language:"javascript",
+code:`document.body.innerHTML=\`
+  <h1>Password Generator</h1>
+  <button id="make">Make Password</button>
+  <h2 id="out"></h2>
+\`;
+
+document.getElementById('make').onclick=function(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$';
+  let p='';
+  for(let i=0;i<12;i++)p+=chars[Math.floor(Math.random()*chars.length)];
+  document.getElementById('out').textContent=p;
+};`
+},
+{
+name:"Blocks: Walk & Talk",
+desc:"Green flag makes the character move and talk.",
+language:"blocks",
+code:`["flag","sayhello","move10","move10","turn15","saywin"]`
+},
+{
+name:"Blocks: Score Clicker",
+desc:"Click the character to earn points.",
+language:"blocks",
+code:`["flag","setscore","showscore","clicksprite","addscore","beep","scoregreater"]`
+},
+{
+name:"Blocks: Space Jump",
+desc:"Press Space to make the character jump.",
+language:"blocks",
+code:`["flag","sayhello","space","jump","highbeep"]`
+},
+{
+name:"Blocks: Dance Party",
+desc:"Green flag starts a little dance and celebration.",
+language:"blocks",
+code:`["flag","sayhello","dance","dance","color","celebrate"]`
+},
+{
+name:"Blocks: Repeat Move",
+desc:"A Control repeat block repeats the next movement.",
+language:"blocks",
+code:`["flag","center","repeat10","move10","bounce","saywin"]`
+}
+];
+
+let selectedCode = "";
+let selectedLanguage = "web";
+let modalMode = "play";
+
+const frameUrls = new WeakMap();
+
+function loadRunnableFrame(frame, code, language){
+  const pageCode = buildPreview(code, language);
+
+  // Revoke the previous temporary page for this iframe.
+  const oldUrl = frameUrls.get(frame);
+  if(oldUrl){
+    URL.revokeObjectURL(oldUrl);
+  }
+
+  try{
+    const blob = new Blob([pageCode], {type:"text/html;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    frameUrls.set(frame, url);
+    frame.src = url;
+  }catch(error){
+    // Fallback for browsers that do not allow Blob iframe URLs.
+    frame.removeAttribute("src");
+    frame.srcdoc = pageCode;
+  }
+}
+
+function buildPreview(code, language){
+  if(language === "blocks") return buildBlocksPreview(code);
+  if(language === "web") return code;
+
+  if(language === "html"){
+    return `<!doctype html><html><head><style>
+    body{font-family:Arial;padding:35px}button{padding:10px 16px}
+    </style></head><body>${code}</body></html>`;
+  }
+
+  if(language === "css"){
+    return `<!doctype html><html><head><style>${code}</style></head><body>
+    <h1>CSS Preview</h1>
+    <p>Change the CSS and press Run.</p>
+    <button>Button</button>
+    <div style="margin-top:20px;padding:20px;border:1px solid #bbb">Preview Box</div>
+    </body></html>`;
+  }
+
+  if(language === "javascript"){
+    return `<!doctype html><html><head><style>
+    body{font-family:Arial;text-align:center;padding:40px}
+    button{padding:12px 18px;font-size:16px}
+    #codeConsole{
+      margin-top:24px;padding:12px;text-align:left;white-space:pre-wrap;
+      background:#111;color:#9ff0b8;border-radius:8px;font-family:monospace
+    }
+    </style></head><body>
+    <div id="codeConsole"></div>
+    <script>
+    const codeConsole = document.getElementById('codeConsole');
+    const originalLog = console.log.bind(console);
+    const originalWarn = console.warn.bind(console);
+    const originalError = console.error.bind(console);
+
+    function printToPreview(type, values){
+      if(!codeConsole || !codeConsole.isConnected) return;
+      const line = document.createElement('div');
+      line.textContent = (type ? type + ': ' : '') + values.map(v => {
+        try{return typeof v === 'object' ? JSON.stringify(v) : String(v)}
+        catch{return String(v)}
+      }).join(' ');
+      codeConsole.appendChild(line);
+    }
+
+    console.log = (...values) => { originalLog(...values); printToPreview('', values); };
+    console.warn = (...values) => { originalWarn(...values); printToPreview('WARN', values); };
+    console.error = (...values) => { originalError(...values); printToPreview('ERROR', values); };
+
+    try{
+    ${code}
+    }catch(error){
+      document.body.innerHTML='<h2 style="color:#c33">JavaScript Error</h2><pre style="text-align:left">'+
+      String(error).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre>';
+    }
+    <\/script></body></html>`;
+  }
+  return code;
+}
+
+function run(){
+  const language = languageSelect.value;
+
+  try{
+    const source = language === "blocks" ? blockCodeString() : editor.value;
+    loadRunnableFrame(preview, source, language);
+    if(language === "blocks"){
+      saveBlocksDraft();
+    }else{
+      localStorage.setItem("codePlaceDraft_" + language, editor.value);
+    }
+    localStorage.setItem("codePlaceLanguage", language);
+    status.textContent = modeInfo[language].name + " is running in Preview.";
+  }catch(error){
+    status.textContent = "Preview error: " + error.message;
+  }
+}
+
+function setLanguage(language, newProject=false){
+  languageSelect.value = language;
+  fileName.textContent = modeInfo[language].file;
+  modeLabel.textContent = modeInfo[language].label;
+
+  const isBlocks = language === "blocks";
+  editor.style.display = isBlocks ? "none" : "block";
+  blocksEditor.classList.toggle("active", isBlocks);
+
+  if(isBlocks){
+    let source = "[]";
+    if(!newProject){
+      source = localStorage.getItem("codePlaceDraft_blocks") || "[]";
+    }
+    loadBlocksFromCode(source);
+  }else{
+    editor.value = newProject
+      ? templates[language]
+      : (localStorage.getItem("codePlaceDraft_" + language) || templates[language]);
+  }
+  run();
+}
+
+function openCodePage(){
+  codePage.classList.add("active");
+  creationsPage.classList.remove("active");
+  codeTab.classList.add("active");
+  creationsTab.classList.remove("active");
+}
+
+function openCreations(){
+  creationsPage.classList.add("active");
+  codePage.classList.remove("active");
+  creationsTab.classList.add("active");
+  codeTab.classList.remove("active");
+  renderCards();
+}
+
+function myCreations(){
+  try{return JSON.parse(localStorage.getItem("codePlaceCreations")) || []}
+  catch{return []}
+}
+
+function escapeHtml(text){
+  return String(text).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+
+function openModal(item, mode="play"){
+  selectedCode = item.code;
+  selectedLanguage = item.language || "web";
+  document.getElementById("modalName").textContent =
+    item.name + " · " + modeInfo[selectedLanguage].name;
+  modal.classList.add("show");
+  setModalMode(mode);
+}
+
+function setModalMode(mode){
+  modalMode = mode;
+  modalContent.innerHTML = "";
+  if(mode === "play"){
+    const frame=document.createElement("iframe");
+    frame.setAttribute("sandbox","allow-scripts allow-modals allow-forms");
+    modalContent.appendChild(frame);
+    loadRunnableFrame(frame, selectedCode, selectedLanguage);
+  }else{
+    const pre=document.createElement("pre");
+    pre.textContent=selectedLanguage==="blocks" ? blockListText(selectedCode) : selectedCode;
+    modalContent.appendChild(pre);
+  }
+}
+
+function useCode(code, language){
+  openCodePage();
+  languageSelect.value=language;
+  fileName.textContent=modeInfo[language].file;
+  modeLabel.textContent=modeInfo[language].label;
+
+  const isBlocks=language==="blocks";
+  editor.style.display=isBlocks?"none":"block";
+  blocksEditor.classList.toggle("active",isBlocks);
+
+  if(isBlocks){
+    loadBlocksFromCode(code);
+  }else{
+    editor.value=code;
+  }
+  run();
+  status.textContent=modeInfo[language].name+" creation loaded. Change anything you want.";
+}
+
+function renderCards(){
+  cards.innerHTML="";
+  const mine=myCreations().map((x,i)=>({...x,mine:true,saveIndex:i}));
+  const wanted=creationFilter.value;
+  const all=[...mine,...examples].filter(item=>wanted==="all" || (item.language||"web")===wanted);
+
+  all.forEach(item=>{
+    const language=item.language||"web";
+    const card=document.createElement("div");
+    card.className="card";
+
+    const previewBox=document.createElement("div");
+    previewBox.className="card-preview";
+    const frame=document.createElement("iframe");
+    frame.setAttribute("sandbox","allow-scripts allow-modals allow-forms");
+    previewBox.appendChild(frame);
+    loadRunnableFrame(frame, item.code, language);
+
+    const body=document.createElement("div");
+    body.className="card-body";
+    body.innerHTML=`
+      <span class="tag ${item.mine?"my-tag":""}">
+        ${item.mine?"MY CREATION · ":""}${escapeHtml(modeInfo[language].name)}
+      </span>
+      <h3>${escapeHtml(item.name)}</h3>
+      <p>${escapeHtml(item.desc||"Saved creation")}</p>
+      <div class="card-actions">
+        <button class="btn primary small play-card">Play</button>
+        <button class="btn small code-card">Code</button>
+        <button class="btn good small use-card">Use</button>
+        ${item.mine?'<button class="btn danger small delete-card">Delete</button>':""}
+      </div>
+    `;
+
+    body.querySelector(".play-card").onclick=()=>openModal(item,"play");
+    body.querySelector(".code-card").onclick=()=>openModal(item,"code");
+    body.querySelector(".use-card").onclick=()=>useCode(item.code,language);
+
+    if(item.mine){
+      body.querySelector(".delete-card").onclick=()=>{
+        const list=myCreations();
+        list.splice(item.saveIndex,1);
+        localStorage.setItem("codePlaceCreations",JSON.stringify(list));
+        renderCards();
+      };
+    }
+
+    card.append(previewBox,body);
+    cards.appendChild(card);
+  });
+}
+
+languageSelect.onchange=()=>{
+  setLanguage(languageSelect.value,false);
+  status.textContent="Switched to "+modeInfo[languageSelect.value].name+".";
+};
+
+creationFilter.onchange=renderCards;
+
+clearBlocksBtn.onclick=()=>{
+  blockProgram=[];
+  saveBlocksDraft();
+  renderBlockStack();
+  run();
+};
+
+runBtn.addEventListener("click", run);
+
+clearBtn.onclick=()=>{
+  if(languageSelect.value==="blocks"){
+    blockProgram=[];
+    saveBlocksDraft();
+    renderBlockStack();
+  }else{
+    editor.value="";
+  }
+  run();
+  status.textContent="Editor cleared.";
+};
+
+newBtn.onclick=()=>{
+  setLanguage(languageSelect.value,true);
+  status.textContent="New "+modeInfo[languageSelect.value].name+" project.";
+};
+
+saveBtn.onclick=()=>{
+  const name=prompt("Name your creation:");
+  if(!name)return;
+  const list=myCreations();
+  const language=languageSelect.value;
+  list.unshift({
+    name:name.slice(0,40),
+    desc:"Your saved "+modeInfo[language].name+" creation.",
+    code:language==="blocks" ? blockCodeString() : editor.value,
+    language:language
+  });
+  localStorage.setItem("codePlaceCreations",JSON.stringify(list.slice(0,50)));
+  status.textContent="Saved! Open Creations to see it.";
+};
+
+codeTab.addEventListener("click", openCodePage);
+creationsTab.addEventListener("click", openCreations);
+
+newProjectBtn.onclick=()=>{
+  openCodePage();
+  setLanguage(languageSelect.value,true);
+};
+
+closeModal.onclick=()=>modal.classList.remove("show");
+viewCodeBtn.onclick=()=>setModalMode("code");
+playBtn.onclick=()=>setModalMode("play");
+
+copyBtn.onclick=async()=>{
+  try{
+    await navigator.clipboard.writeText(
+      selectedLanguage==="blocks" ? blockListText(selectedCode) : selectedCode
+    );
+    copyBtn.textContent="Copied!";
+    setTimeout(()=>copyBtn.textContent="Copy Code",1000);
+  }catch{
+    setModalMode("code");
+    alert("Copy did not work automatically. The code is shown so you can copy it.");
+  }
+};
+
+useBtn.onclick=()=>{
+  modal.classList.remove("show");
+  useCode(selectedCode,selectedLanguage);
+};
+
+modal.onclick=e=>{
+  if(e.target===modal)modal.classList.remove("show");
+};
+
+editor.addEventListener("keydown",e=>{
+  if(e.key==="Tab"){
+    e.preventDefault();
+    editor.setRangeText("  ",editor.selectionStart,editor.selectionEnd,"end");
+  }
+  if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){
+    e.preventDefault();
+    run();
+  }
+});
+
+renderBlockCategories();
+renderBlockPalette();
+renderBlockStack();
+
+const startingLanguage=localStorage.getItem("codePlaceLanguage")||"web";
+setLanguage(startingLanguage,false);
+</script>
+</body>
+</html>
